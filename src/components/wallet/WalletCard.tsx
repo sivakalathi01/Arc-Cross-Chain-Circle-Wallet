@@ -1,6 +1,7 @@
 'use client'
 
 import { Wallet, WalletBalance } from '@/types'
+import { useState } from 'react'
 
 interface WalletCardProps {
   wallet: Wallet
@@ -10,9 +11,21 @@ interface WalletCardProps {
 }
 
 export function WalletCard({ wallet, balance, isSelected, onSelect }: WalletCardProps) {
+  const [copied, setCopied] = useState(false)
+  const [showFullAddress, setShowFullAddress] = useState(false)
+  
   const totalUSDC = balance
     .filter(b => b.token.symbol === 'USDC')
     .reduce((total, b) => total + parseFloat(b.amount), 0)
+
+  const copyAddress = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (wallet.address) {
+      navigator.clipboard.writeText(wallet.address)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
 
   return (
     <div
@@ -49,9 +62,37 @@ export function WalletCard({ wallet, balance, isSelected, onSelect }: WalletCard
       <div className="space-y-2">
         <div className="flex justify-between items-center">
           <span className="text-sm text-gray-600">Address</span>
-          <span className="text-sm font-mono text-gray-900">
-            {wallet.address ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}` : 'N/A'}
-          </span>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={copyAddress}
+              onMouseEnter={() => setShowFullAddress(true)}
+              onMouseLeave={() => setShowFullAddress(false)}
+              className="relative text-sm font-mono text-gray-900 hover:text-blue-600 transition-colors"
+              title="Click to copy full address"
+            >
+              {showFullAddress && wallet.address ? (
+                <span className="text-xs">{wallet.address}</span>
+              ) : (
+                <span>{wallet.address ? `${wallet.address.slice(0, 6)}...${wallet.address.slice(-4)}` : 'N/A'}</span>
+              )}
+              {copied && (
+                <span className="absolute -top-8 left-1/2 transform -translate-x-1/2 bg-green-500 text-white text-xs px-2 py-1 rounded whitespace-nowrap">
+                  Copied!
+                </span>
+              )}
+            </button>
+            {wallet.address && (
+              <svg 
+                onClick={copyAddress}
+                className="w-4 h-4 text-gray-400 hover:text-blue-600 cursor-pointer" 
+                fill="none" 
+                stroke="currentColor" 
+                viewBox="0 0 24 24"
+              >
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+            )}
+          </div>
         </div>
         
         <div className="flex justify-between items-center">
