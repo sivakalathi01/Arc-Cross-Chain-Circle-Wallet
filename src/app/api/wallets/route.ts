@@ -1,0 +1,83 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { CircleDirectClient } from '@/lib/circle-direct'
+import { walletStorage } from '@/lib/wallet-storage'
+
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
+
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json()
+    const { name } = body
+
+    console.log('🔨 API: Creating wallet via Circle Direct client...', { name })
+
+    // Initialize client inside function to avoid module-level errors
+    const circleClient = new CircleDirectClient(
+      process.env.CIRCLE_API_KEY || '',
+      process.env.CIRCLE_ENTITY_SECRET || '',
+      process.env.CIRCLE_BASE_URL || 'https://api.circle.com'
+    )
+
+    // Step 1: Create wallet set
+    const walletSetName = name || 'My Wallet Set'
+    const walletSetResponse = await circleClient.createWalletSet(walletSetName)
+    const walletSetId = walletSetResponse.data.walletSet.id
+    
+    console.log('✅ Wallet set created:', walletSetId)
+
+    // Step 2: Create wallet in the wallet set
+    const wallet = await circleClient.createWallet(walletSetId, 'ETH-SEPOLIA')
+
+    console.log('✅ Wallet created successfully:', wallet.data.id)
+
+    // Store the wallet in our storage
+    walletStorage.addWallet({
+      id: wallet.data.id,
+      address: wallet.data.address,
+      blockchain: wallet.data.blockchain,
+      walletSetId: walletSetId,
+      createDate: wallet.data.createDate
+    })
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        wallet: wallet.data,
+        walletSetId: walletSetId
+      }
+    })
+  } catch (error: any) {
+    console.error('❌ API: Wallet creation failed:', error)
+    
+    return NextResponse.json({
+      success: false,
+      error: error.message || 'Failed to create wallet'
+    }, { status: 500 })
+  }
+}
+
+export async function GET(request: NextRequest) {
+  try {
+    console.log('📋 API: Fetching wallets from storage...')
+
+    // Get wallets from our in-memory storage
+    const wallets = walletStorage.getWallets()
+    
+    console.log(`✅ Found ${wallets.length} wallet(s) in storage`)
+
+    return NextResponse.json({
+      success: true,
+      data: {
+        wallets: wallets
+      }
+    })
+  } catch (error: any) {
+    console.error('❌ API: Wallet fetching failed:', error)
+    
+    return NextResponse.json({
+      success: false,
+      error: error.message || 'Failed to fetch wallets'
+    }, { status: 500 })
+  }
+}
