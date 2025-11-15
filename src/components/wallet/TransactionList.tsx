@@ -42,8 +42,21 @@ export function TransactionList({ transactions, loading, onLoadMore, hasMore }: 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
           </svg>
         </div>
-        <p className="text-gray-500 text-lg mb-2">No transactions yet</p>
-        <p className="text-gray-400 text-sm">Your transaction history will appear here</p>
+        <p className="text-gray-500 text-lg mb-2">Transaction history not available</p>
+        <p className="text-gray-400 text-sm mb-4">
+          Blockchain transaction scanning not yet implemented
+        </p>
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 max-w-md mx-auto text-left">
+          <p className="text-sm text-blue-800 font-medium mb-2">✨ How to view your transactions:</p>
+          <ul className="text-xs text-blue-700 space-y-1 list-disc list-inside">
+            <li>Copy your wallet address from above</li>
+            <li>Visit <a href="https://sepolia.etherscan.io" target="_blank" rel="noopener noreferrer" className="underline hover:text-blue-900">sepolia.etherscan.io</a></li>
+            <li>Paste your address to see all transactions</li>
+          </ul>
+          <p className="text-xs text-blue-600 mt-3">
+            🔄 Coming soon: Automatic transaction indexing via Alchemy/Etherscan API
+          </p>
+        </div>
       </div>
     )
   }
