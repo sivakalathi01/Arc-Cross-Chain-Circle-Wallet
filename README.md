@@ -5,18 +5,19 @@ A comprehensive DeFi Cross Chain application with embedded wallet experience usi
 ## 🌟 Features
 
 ### Core Functionality
-- **Embedded Wallet**: Native wallet experience built into your application using Circle's Programmable Wallets
-- **Cross-Chain USDC Transfers**: Seamless transfers across multiple blockchains using Circle's CCTP (Cross-Chain Transfer Protocol)
-- **In-App Payments**: Integrated payment flows for merchant transactions
-- **DeFi Integration**: Access to yield farming, staking, and liquidity provision through Arc protocol
-- **Multi-Chain Support**: Ethereum, Polygon, Arbitrum, Optimism, and Avalanche
+- **Developer-Controlled Wallets**: Fully functional wallet creation using Circle's Developer-Controlled Wallets API
+- **RSA-OAEP Encryption**: Secure entity secret encryption for wallet operations
+- **Smart Contract Accounts (SCA)**: Enhanced security and programmable wallet functionality
+- **Multi-Chain Support**: Ethereum Sepolia testnet (extensible to mainnet and other chains)
+- **Real-time Wallet Management**: Create, store, and manage wallets with persistent storage
 
 ### Technical Features
-- **Smart Contract Accounts (SCA)**: Enhanced security and functionality
-- **Transaction Management**: Real-time transaction tracking and status updates
-- **Balance Monitoring**: Live balance updates across all supported chains
-- **Fee Estimation**: Accurate gas fee calculations for all operations
-- **Mock API Implementation**: Complete development environment with mock services
+- **Direct Circle API Integration**: Bypassed SDK for full control and flexibility
+- **Server-Side Encryption**: Node.js crypto module for RSA-OAEP encryption with SHA-256
+- **In-Memory Wallet Storage**: Fast wallet retrieval (ready for database integration)
+- **Next.js 14 API Routes**: Server-side wallet operations with runtime: 'nodejs'
+- **Cross-Platform UUID**: Compatible UUID generation for browser and server
+- **Automatic Entity Secret Setup**: Self-configuring encryption workflow
 
 ## 🏗️ Architecture
 
@@ -29,11 +30,9 @@ A comprehensive DeFi Cross Chain application with embedded wallet experience usi
 - **Framer Motion**: Animations and transitions
 
 ### Integration Partners
-- **Circle Wallets**: Programmable wallet infrastructure
-- **Circle CCTP**: Cross-chain USDC transfer protocol
-- **Gateway**: Cross-chain transaction optimization
-- **Arc Protocol**: DeFi yield and liquidity management
-- **Wagmi**: Ethereum React hooks
+- **Circle Developer-Controlled Wallets**: Programmable wallet infrastructure
+- **Circle W3S API**: Direct API integration for wallet management
+- **Wagmi v1**: Ethereum React hooks for web3 connectivity
 
 ## 🚀 Getting Started
 
@@ -55,24 +54,23 @@ A comprehensive DeFi Cross Chain application with embedded wallet experience usi
    ```
 
 3. **Environment Setup**
-   ```bash
-   cp .env.local.example .env.local
+   
+   Create a `.env` file in the root directory:
+   ```env
+   # Circle Developer-Controlled Wallets Configuration
+   CIRCLE_API_KEY=your_circle_api_key_here
+   CIRCLE_ENTITY_SECRET=your_64_char_hex_entity_secret_here
    ```
    
-   Update the environment variables:
-   ```env
-   # Circle Configuration
-   CIRCLE_API_KEY=your_circle_api_key_here
-   CIRCLE_ENTITY_SECRET=your_circle_entity_secret_here
+   **To get your Circle API credentials:**
+   - Sign up at [Circle Developer Console](https://console.circle.com/)
+   - Navigate to Developer-Controlled Wallets
+   - Copy your API Key
+   - Generate an Entity Secret (64-character hex string)
    
-   # Gateway Configuration
-   GATEWAY_API_KEY=your_gateway_api_key_here
-   
-   # Arc Configuration
-   ARC_API_KEY=your_arc_api_key_here
-   
-   # WalletConnect Configuration
-   NEXT_PUBLIC_WALLET_CONNECT_PROJECT_ID=your_walletconnect_project_id_here
+   **To generate an Entity Secret:**
+   ```bash
+   node scripts/generate-circle-entity-secret.js
    ```
 
 4. **Start Development Server**
@@ -85,19 +83,18 @@ A comprehensive DeFi Cross Chain application with embedded wallet experience usi
 ## 📱 Usage
 
 ### Wallet Management
-1. **Create Wallet**: Click "Create Wallet" to generate a new smart contract account
-2. **Select Wallet**: Choose from multiple wallets in your account
-3. **View Balances**: Monitor USDC and native token balances across chains
+1. **Create Wallet**: Click "Create Wallet" button and provide a wallet name
+2. **View Wallets**: See all created wallets with their blockchain addresses
+3. **Wallet Details**: Each wallet displays its ID, blockchain, and creation date
 
-### Transactions
-1. **Send USDC**: Transfer USDC to any Ethereum address
-2. **Cross-Chain Transfer**: Move USDC between different blockchains
-3. **Transaction History**: View all past transactions with status tracking
-
-### DeFi Features
-1. **Yield Farming**: Access high-yield opportunities through Arc protocol
-2. **Staking**: Stake tokens for rewards
-3. **Liquidity Provision**: Provide liquidity to earn fees
+### Current Features
+- ✅ Wallet creation with Circle Developer API
+- ✅ Automatic wallet set management
+- ✅ RSA-OAEP entity secret encryption
+- ✅ In-memory wallet storage and retrieval
+- 🔄 Transaction functionality (coming soon)
+- 🔄 Balance checking (coming soon)
+- 🔄 Cross-chain transfers (coming soon)
 
 ## 🛠️ Development
 
@@ -105,99 +102,87 @@ A comprehensive DeFi Cross Chain application with embedded wallet experience usi
 ```
 Arc_Cross_Chain/
 ├── src/
-│   ├── app/                 # Next.js App Router pages
-│   ├── components/          # React components
-│   │   ├── wallet/         # Wallet-specific components
-│   │   └── layout/         # Layout components
-│   ├── context/            # React context providers
-│   ├── hooks/              # Custom React hooks
-│   ├── lib/                # Utility libraries and services
-│   │   ├── mocks/          # Mock implementations for development
-│   │   ├── circle.ts       # Circle Wallet service
-│   │   ├── cctp.ts         # CCTP service
-│   │   ├── gateway.ts      # Gateway service
-│   │   └── arc.ts          # Arc protocol service
-│   ├── store/              # Zustand state management
-│   ├── types/              # TypeScript type definitions
-│   └── utils/              # Utility functions
-├── public/                 # Static assets
-└── docs/                   # Documentation
+│   ├── app/
+│   │   ├── api/
+│   │   │   └── wallets/        # Wallet API routes (POST/GET)
+│   │   ├── layout.tsx          # Root layout
+│   │   ├── page.tsx            # Main dashboard
+│   │   └── providers.tsx       # Wagmi provider
+│   ├── components/
+│   │   ├── wallet/
+│   │   │   ├── CreateWalletModal.tsx
+│   │   │   ├── WalletCard.tsx
+│   │   │   └── WalletDashboard.tsx
+│   │   └── layout/             # Header, Footer components
+│   ├── lib/
+│   │   ├── circle-direct.ts    # Direct Circle API client
+│   │   ├── circle-working.ts   # Frontend Circle service
+│   │   ├── wallet-storage.ts   # In-memory wallet storage
+│   │   └── wagmi.ts            # Wagmi configuration
+│   ├── types/                  # TypeScript definitions
+│   └── context/                # React context
+├── scripts/
+│   └── generate-circle-entity-secret.js
+├── doc/                        # Documentation files
+└── .env                        # Environment variables
 ```
 
 ### Available Scripts
-- `npm run dev` - Start development server
+- `npm run dev` - Start development server (port 3000)
 - `npm run build` - Build for production
 - `npm run start` - Start production server
 - `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript checks
+- `node scripts/generate-circle-entity-secret.js` - Generate entity secret
 
-### Mock Services
-The application includes comprehensive mock implementations for all external services:
-- **Circle Wallet SDK**: Mock wallet creation, balance checking, and transactions
-- **CCTP SDK**: Mock cross-chain transfer functionality
-- **Gateway SDK**: Mock route optimization and execution
-- **Arc SDK**: Mock DeFi yield and staking operations
+## 🔒 Security Implementation
 
-## 🔒 Security Features
-
-### Current Implementation
-- **Transaction Validation**: Input validation for addresses and amounts
-- **Error Handling**: Comprehensive error handling and user feedback
-- **Type Safety**: Full TypeScript implementation
+### Encryption & Security
+- **RSA-OAEP Encryption**: Entity secrets encrypted with RSA_PKCS1_OAEP_PADDING and SHA-256
+- **Server-Side Operations**: All sensitive operations run in Node.js runtime
+- **Environment Variables**: Secrets stored in `.env` (excluded from git)
+- **Public Key Fetching**: Dynamic retrieval of Circle's RSA public key
+- **Base64 Encoding**: Encrypted ciphertext transmitted as base64
 
 ### Production Considerations
-- **Rate Limiting**: Implement request rate limiting
-- **User Authentication**: Add proper user authentication flows
-- **Transaction Signing**: Implement secure transaction signing
-- **Audit Trails**: Add comprehensive logging and monitoring
+- [ ] Replace in-memory storage with database (PostgreSQL/MongoDB)
+- [ ] Add user authentication and authorization
+- [ ] Implement rate limiting on API routes
+- [ ] Add comprehensive error logging and monitoring
+- [ ] Set up wallet access controls
+- [ ] Implement transaction signing flows
 
 ## 🌐 Supported Networks
 
-| Network | Chain ID | Native Currency | USDC Contract |
-|---------|----------|-----------------|---------------|
-| Ethereum | 1 | ETH | 0xA0b86a33E6417c4c8e9C2a2a9e1b17a7C01536E7 |
-| Polygon | 137 | MATIC | 0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174 |
-| Arbitrum | 42161 | ETH | 0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8 |
-| Optimism | 10 | ETH | 0x7F5c764cBc14f9669B88837ca1490cCa17c31607 |
-| Avalanche | 43114 | AVAX | 0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E |
+Currently configured for:
+- **Ethereum Sepolia** (Testnet)
 
-## 🔗 API Integration
+Easily extensible to:
+- Ethereum Mainnet
+- Polygon (PoS & zkEVM)
+- Arbitrum One & Nova
+- Optimism
+- Avalanche C-Chain
+- Base
 
-### Circle Wallets API
-- Wallet creation and management
-- Balance queries
-- Transaction execution
-- Message signing
+## 🔗 Circle API Integration
 
-### CCTP API
-- Cross-chain burn transactions
-- Attestation retrieval
-- Cross-chain mint transactions
-- Transfer status tracking
+### Wallet Operations
+- **POST /v1/w3s/developer/walletSets** - Create wallet set with encrypted entity secret
+- **POST /v1/w3s/developer/wallets** - Create developer-controlled wallet
+- **GET /v1/w3s/config/entity/publicKey** - Fetch RSA public key for encryption
 
-### Gateway API
-- Route optimization
-- Multi-protocol support
-- Gas fee estimation
-- Transaction execution
+### Key Features
+- Direct API calls (no SDK dependency)
+- Automatic entity secret configuration
+- Retry logic for entity secret setup
+- Wallet set management
+- Cross-platform compatible
 
-### Arc Protocol API
-- Yield opportunity discovery
-- Staking operations
-- Reward claiming
-- Portfolio management
-
-## 📊 State Management
-
-### Zustand Store
-The application uses Zustand for state management with the following stores:
-- **Wallet Store**: User wallets, balances, and transactions
-- **UI Store**: Loading states, errors, and notifications
-
-### Data Flow
-1. User interactions trigger actions
-2. Actions call service methods
-3. Services update the store
+### Documentation
+See `/doc` folder for detailed implementation guides:
+- `CIRCLE_ARCHITECTURE.md` - System architecture
+- `CIRCLE_SETUP_GUIDE.md` - Setup instructions
+- `TESTING.md` - Testing guide
 4. Components react to store changes
 5. UI updates reflect new state
 
