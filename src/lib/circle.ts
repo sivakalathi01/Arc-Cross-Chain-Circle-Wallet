@@ -101,17 +101,14 @@ class CircleWalletService {
           this.config.apiKey.startsWith('TEST_API_KEY:98c189a0') ||
           this.config.apiKey === 'your_circle_test_key' ||
           this.config.apiKey === 'your_circle_testnet_api_key_here') {
-        console.log('🦊 MetaMask Mode Active!')
+        console.log('⚠️  Placeholder API keys detected!')
         console.log('💡 Circle wallet creation requires real API keys')
-        console.log('🔗 Use the MetaMask tab to connect your existing wallet')
-        console.log('💰 Your 10 USDC on Sepolia & Arc testnets is ready for testing')
         console.log('🔑 For Circle wallet creation, add real API keys to .env.local:')
         console.log('   1. Visit https://developers.circle.com/')
         console.log('   2. Create a developer account')
         console.log('   3. Generate real API keys')
         console.log('   4. Update CIRCLE_API_KEY in .env.local')
         
-        // Initialize in MetaMask compatibility mode
         this.isInitialized = true
         return
       }
@@ -187,13 +184,12 @@ class CircleWalletService {
     
     const selectedBlockchain = blockchain || 'ARB-SEPOLIA'
     
-    // Check if we're in MetaMask mode (placeholder keys) - but allow TEST_ keys for testnet
+    // Check if placeholder API keys are used
     if (this.config.apiKey === 'your_circle_testnet_api_key_here' ||
         this.config.apiKey === 'your_circle_test_key') {
-      console.log('🦊 MetaMask Integration Active')
+      console.log('⚠️  Placeholder API keys detected')
       console.log('💡 To create Circle wallets, you need real API keys')
-      console.log('🔗 Use the MetaMask tab to test with your existing 10 USDC')
-      throw new Error('Use MetaMask tab to connect your wallet with real USDC tokens')
+      throw new Error('Circle API keys required for wallet creation')
     }
 
     // Real Circle testnet keys detected
@@ -292,8 +288,8 @@ class CircleWalletService {
       
       if (!result.success) {
         if (result.error && result.error.includes('Circle API key is required')) {
-          console.log('🦊 No Circle API key configured - MetaMask mode active')
-          console.log('💡 Use MetaMask tab to connect your existing wallet')
+          console.log('⚠️  No Circle API key configured')
+          console.log('💡 Add Circle API keys to create wallets')
           return []
         }
         console.log('⚠️ Wallet fetching issue:', result.error)
@@ -305,8 +301,8 @@ class CircleWalletService {
     } catch (error) {
       console.error('❌ Failed to fetch wallets:', error)
       if (error instanceof Error && error.message.includes('fetch')) {
-        console.log('🦊 Server API not available - MetaMask mode active')
-        console.log('💡 Use MetaMask tab to connect your existing wallet')
+        console.log('⚠️  Server API not available')
+        console.log('💡 Check if Next.js server is running')
       }
       return []
     }
@@ -321,7 +317,7 @@ class CircleWalletService {
       
       if (!result.success) {
         if (result.error.includes('Circle API key is required')) {
-          console.log('🦊 No Circle API key - Use MetaMask tab for real balances')
+          console.log('⚠️  No Circle API key - Cannot fetch balances')
           return { tokenBalances: [] }
         }
         throw new Error(result.error || 'Failed to fetch balance')
@@ -331,7 +327,7 @@ class CircleWalletService {
       return result.data
     } catch (error) {
       console.error('❌ Failed to fetch wallet balance:', error)
-      console.log('💡 Use MetaMask tab to see real USDC balances')
+      console.log('💡 Add Circle API keys to see wallet balances')
       return { tokenBalances: [] }
     }
   }

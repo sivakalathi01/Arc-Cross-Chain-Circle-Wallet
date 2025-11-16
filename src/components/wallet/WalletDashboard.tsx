@@ -1,14 +1,12 @@
 'use client'
 
 import React, { useState } from 'react'
-import { Wallet, Send, ArrowUpDown, Plus, RefreshCw, Droplets, Plug } from 'lucide-react'
+import { Wallet, Send, ArrowUpDown, Plus, RefreshCw, Droplets } from 'lucide-react'
 import { WalletCard } from './WalletCard'
 import { TransactionList } from './TransactionList'
 import { SendForm } from './SendForm'
-import { CrossChainForm } from './CrossChainForm'
 import { CreateWalletModal } from './CreateWalletModal'
 import FaucetPanel from './FaucetPanel'
-import { MetaMaskConnect } from './MetaMaskConnect'
 import { useWallet } from '@/context/WalletContext'
 import { getCircleConfigStatus } from '@/lib/circle-config'
 
@@ -26,16 +24,9 @@ export function WalletDashboard() {
     refreshTransactions,
   } = useWallet()
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'send' | 'faucet' | 'metamask'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'send' | 'faucet'>('overview')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const circleConfig = getCircleConfigStatus()
-  const [metaMaskConnected, setMetaMaskConnected] = useState(false)
-  const [metaMaskAddress, setMetaMaskAddress] = useState<string>()
-
-  const handleMetaMaskConnectionChange = (connected: boolean, address?: string) => {
-    setMetaMaskConnected(connected)
-    setMetaMaskAddress(address)
-  }
 
   const selectedWalletBalances = selectedWallet ? balances[selectedWallet.id] || [] : []
 
@@ -123,39 +114,19 @@ export function WalletDashboard() {
         {wallets.length === 0 ? (
           <div className="text-center py-8">
             <Wallet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-600 text-lg mb-2">Ready to Test Cross-Chain</p>
+            <p className="text-gray-600 text-lg mb-2">Ready to Get Started</p>
             <p className="text-gray-500 text-sm mb-4">
-              {circleConfig.hasApiKeys 
-                ? 'Connect your MetaMask with 10 USDC or create a Circle wallet'
-                : '🦊 Connect MetaMask (Recommended) - You have 10 USDC ready to test!'
-              }
+              Create your first Circle wallet to start using cross-chain USDC transfers
             </p>
-            {!circleConfig.hasApiKeys && (
-              <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-4 max-w-md mx-auto">
-                <p className="text-blue-700 text-xs">
-                  💡 Circle wallet creation requires API keys. Use MetaMask for immediate testing!
-                </p>
-              </div>
-            )}
-            <div className="flex justify-center space-x-3">
-              <button
-                onClick={() => setActiveTab('metamask')}
-                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-              >
-                <Plug className="h-4 w-4 mr-2" />
-                Connect MetaMask
-              </button>
+            <div className="flex justify-center">
               <button
                 onClick={() => setShowCreateModal(true)}
-                className={`inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white focus:outline-none focus:ring-2 focus:ring-offset-2 ${
-                  circleConfig.hasApiKeys 
-                    ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' 
-                    : 'bg-orange-500 hover:bg-orange-600 focus:ring-orange-500'
-                }`}
-                title={circleConfig.hasApiKeys ? 'Create Circle Wallet' : 'Requires Circle API keys - Use MetaMask instead'}
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                disabled={!circleConfig.hasApiKeys}
+                title={!circleConfig.hasApiKeys ? 'Requires Circle API keys' : 'Create Circle Wallet'}
               >
                 <Plus className="h-4 w-4 mr-2" />
-                {circleConfig.hasApiKeys ? 'Create Circle Wallet' : 'Circle Wallet (Needs API Keys)'}
+                Create Circle Wallet
               </button>
             </div>
           </div>
@@ -210,17 +181,6 @@ export function WalletDashboard() {
               >
                 <Droplets className="h-4 w-4 mr-2 inline" />
                 Testnet Faucet
-              </button>
-              <button
-                onClick={() => setActiveTab('metamask')}
-                className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                  activeTab === 'metamask'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <Plug className="h-4 w-4 mr-2 inline" />
-                MetaMask {metaMaskConnected && <span className="text-green-500">●</span>}
               </button>
             </nav>
           </div>
@@ -299,42 +259,6 @@ export function WalletDashboard() {
                 walletAddress={selectedWallet.address}
               />
             )}
-
-            {activeTab === 'metamask' && (
-              <div className="space-y-6">
-                <div className="text-center mb-6">
-                  <h3 className="text-xl font-semibold text-gray-900 mb-2">Connect Your MetaMask</h3>
-                  <p className="text-gray-600">
-                    Connect your MetaMask wallet with 10 USDC to test cross-chain transfers
-                  </p>
-                </div>
-                
-                <MetaMaskConnect onConnectionChange={handleMetaMaskConnectionChange} />
-                
-                {metaMaskConnected && metaMaskAddress && (
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                    <h4 className="font-medium text-blue-900 mb-2">Ready for Cross-Chain Testing!</h4>
-                    <p className="text-sm text-blue-800 mb-3">
-                      Your MetaMask is connected. You can now test cross-chain USDC transfers using the Send tab.
-                    </p>
-                    <div className="flex space-x-3">
-                      <button
-                        onClick={() => setActiveTab('send')}
-                        className="text-sm bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
-                      >
-                        Start Cross-Chain Transfer
-                      </button>
-                      <button
-                        onClick={() => setActiveTab('send')}
-                        className="text-sm bg-gray-600 text-white px-4 py-2 rounded-md hover:bg-gray-700"
-                      >
-                        Send USDC
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
           </div>
         </div>
       )}
@@ -352,7 +276,6 @@ export function WalletDashboard() {
               }
             } catch (error: any) {
               if (error.message.includes('Circle API key is required') || 
-                  error.message.includes('MetaMask tab') ||
                   error.message.includes('Server API not available')) {
                 // Close modal and show helpful guidance
                 setShowCreateModal(false)
@@ -360,19 +283,9 @@ export function WalletDashboard() {
                 // Show toast notification with guidance
                 const toast = (await import('react-hot-toast')).default
                 toast.error('Circle API keys required for wallet creation', {
-                  duration: 4000,
+                  duration: 5000,
                   icon: '🔑'
                 })
-                
-                // Show follow-up guidance
-                setTimeout(() => {
-                  toast.success('Use MetaMask tab to test with your 10 USDC!', {
-                    duration: 6000,
-                    icon: '🦊'
-                  })
-                }, 1000)
-                
-                setActiveTab('metamask') // Switch to MetaMask tab
               } else {
                 // Show the actual error for other issues
                 const toast = (await import('react-hot-toast')).default

@@ -47,7 +47,7 @@ export function getCircleConfigStatus(): {
   return {
     hasApiKeys: false,
     message: 'Circle API keys not configured',
-    recommendation: 'Use MetaMask tab to test with your 10 USDC'
+    recommendation: 'Add Circle API keys to create wallets'
   }
 }
 

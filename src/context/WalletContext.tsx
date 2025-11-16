@@ -83,8 +83,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const userWallets = await circleWalletService.getWallets()
       
       if (userWallets.length === 0) {
-        console.log('🦊 No Circle wallets found - MetaMask integration ready')
-        console.log('💡 Use MetaMask tab to connect your wallet with 10 USDC')
+        console.log('📭 No Circle wallets found - Create your first wallet!')
       } else {
         console.log(`✅ Found ${userWallets.length} Circle wallets`)
       }
@@ -135,7 +134,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         }
       }, 500)
       
-      toast.success('Arc Cross Chain Wallet ready! Use MetaMask tab to connect your 10 USDC')
+      toast.success('Arc Cross Chain Wallet ready!')
     } catch (error) {
       console.error('❌ Critical initialization error:', error)
       setError(error instanceof Error ? error.message : 'Failed to initialize wallet')
