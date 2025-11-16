@@ -220,8 +220,6 @@ export function TransactionList({ transactions, loading, onLoadMore, hasMore }: 
                 {new Date(transaction.createDate).toLocaleDateString()}
               </span>
             </div>
-              </span>
-            </div>
           </div>
         </div>
       ))}

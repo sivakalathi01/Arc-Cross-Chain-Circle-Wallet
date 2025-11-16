@@ -207,7 +207,7 @@ class DatabaseService {
 
     try {
       const result = await this.pool.query(query, [id]);
-      const deleted = result.rowCount && result.rowCount > 0;
+      const deleted = Boolean(result.rowCount && result.rowCount > 0);
       if (deleted) {
         console.log(`🗑️  Wallet deleted from database: ${id}`);
       }

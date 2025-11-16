@@ -76,9 +76,9 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       console.log('📡 Connecting to Circle testnet service...')
       await circleWalletService.initialize()
       
-      console.log('🌐 Connecting to CCTP service with Circle API integration...')
+      console.log('🌉 Connecting to CCTP service with Circle API integration...')
       const circleClient = circleWalletService.getCircleClient()
-      await cctpService.initialize(circleClient)
+      await cctpService.initialize(circleClient || undefined)
       console.log('✅ CCTP service ready for cross-chain transfers')
 
       // Initialize Gateway service for transaction routing
@@ -243,7 +243,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
                           params.destinationBlockchain !== selectedWallet.blockchain
 
       // If cross-chain, use Gateway to find optimal route
-      if (isCrossChain) {
+      if (isCrossChain && params.destinationBlockchain) {
         console.log('🌉 Cross-chain transfer detected - querying Gateway for optimal route...')
         try {
           const blockchainToChainId: Record<string, number> = {
@@ -283,11 +283,8 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         tokenAddress: params.tokenAddress,
       })
 
-      // Determine if this is a cross-chain CCTP transfer
-      const isCrossChain = params.destinationBlockchain && 
-                          params.destinationBlockchain !== selectedWallet.blockchain
-
       // Construct a complete transaction object from the response
+      // (isCrossChain already determined earlier for Gateway routing)
       const completeTransaction: Transaction = {
         id: transaction.id,
         blockchain: selectedWallet.blockchain, // Source blockchain

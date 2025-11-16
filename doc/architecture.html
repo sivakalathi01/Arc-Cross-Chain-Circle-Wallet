@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Arc Cross-Chain Wallet Architecture</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+        
+        .nav {
+            background: #f8f9fa;
+            padding: 20px;
+            border-bottom: 2px solid #e9ecef;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .nav button {
+            padding: 10px 20px;
+            border: none;
+            background: #667eea;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.3s;
+        }
+        
+        .nav button:hover {
+            background: #764ba2;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+        
+        .nav button.active {
+            background: #764ba2;
+            box-shadow: 0 4px 12px rgba(118, 75, 162, 0.4);
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .diagram-section {
+            display: none;
+        }
+        
+        .diagram-section.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .diagram-title {
+            font-size: 2em;
+            color: #333;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 3px solid #667eea;
+        }
+        
+        .diagram-description {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+            line-height: 1.6;
+        }
+        
+        .mermaid {
+            background: #f8f9fa;
+            padding: 30px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border: 1px solid #e9ecef;
+        }
+        
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .tech-card {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+        
+        .tech-card h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+        
+        .tech-card ul {
+            list-style: none;
+            padding-left: 0;
+        }
+        
+        .tech-card li {
+            padding: 5px 0;
+            color: #555;
+        }
+        
+        .tech-card li:before {
+            content: "✓ ";
+            color: #667eea;
+            font-weight: bold;
+        }
+        
+        .footer {
+            background: #f8f9fa;
+            padding: 20px;
+            text-align: center;
+            color: #666;
+            border-top: 2px solid #e9ecef;
+        }
+    </style>
+    <script>
+        mermaid.initialize({ 
+            startOnLoad: false,
+            theme: 'default',
+            securityLevel: 'loose'
+        });
+        
+        // Render all diagrams when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            // Make all sections temporarily visible
+            const sections = document.querySelectorAll('.diagram-section');
+            sections.forEach(section => {
+                section.style.display = 'block';
+                section.style.visibility = 'hidden';
+                section.style.position = 'absolute';
+            });
+            
+            // Initialize mermaid for all diagrams
+            mermaid.init(undefined, document.querySelectorAll('.mermaid')).then(() => {
+                // Restore normal display after rendering
+                sections.forEach(section => {
+                    section.style.display = '';
+                    section.style.visibility = '';
+                    section.style.position = '';
+                });
+                
+                // Show the active section
+                document.getElementById('overview').classList.add('active');
+            });
+        });
+        
+        function showDiagram(id) {
+            // Hide all sections
+            document.querySelectorAll('.diagram-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(id).classList.add('active');
+            
+            // Update button states
+            document.querySelectorAll('.tab-button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+        }
+    </script>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🏗️ Arc Cross-Chain Wallet Architecture</h1>
+            <p>Circle Developer Wallets + CCTP + Gateway.fm Integration</p>
+        </div>
+        
+        <div class="nav">
+            <button onclick="showDiagram('overview')" class="tab-button active">System Overview</button>
+            <button onclick="showDiagram('flow')" class="tab-button">Transaction Flow</button>
+            <button onclick="showDiagram('components')" class="tab-button">Components</button>
+            <button onclick="showDiagram('dataflow')" class="tab-button">Data Flow</button>
+            <button onclick="showDiagram('database')" class="tab-button">Database Schema</button>
+            <button onclick="showDiagram('deployment')" class="tab-button">Deployment</button>
+            <button onclick="showDiagram('tech')" class="tab-button">Tech Stack</button>
+        </div>
+        
+        <div class="content">
+            <!-- System Overview -->
+            <div id="overview" class="diagram-section active">
+                <h2 class="diagram-title">System Overview</h2>
+                <p class="diagram-description">
+                    High-level architecture showing the frontend layer, service layer, external APIs, and data storage components.
+                </p>
+                <div class="mermaid">
+graph TB
+    subgraph "Frontend Layer"
+        UI[Next.js UI Components]
+        WC[WalletContext]
+        SF[SendForm]
+        TL[TransactionList]
+        WD[WalletDashboard]
+    end
+
+    subgraph "Service Layer"
+        CWS[Circle Wallet Service]
+        CCTP[CCTP Service]
+        GW[Gateway Service]
+        DB[Database Service]
+    end
+
+    subgraph "External APIs"
+        CIRCLE[Circle API]
+        GATEWAY[Gateway.fm API]
+        ARC[Arc Testnet RPC]
+        ETH[Ethereum Sepolia RPC]
+    end
+
+    subgraph "Data Storage"
+        PG[(PostgreSQL)]
+        MEM[In-Memory Cache]
+    end
+
+    UI --> WC
+    WC --> CWS
+    WC --> CCTP
+    WC --> GW
+    WC --> DB
+    
+    SF --> WC
+    TL --> WC
+    WD --> WC
+    
+    CWS --> CIRCLE
+    CCTP --> CIRCLE
+    GW --> GATEWAY
+    DB --> PG
+    DB --> MEM
+    
+    CWS --> ARC
+    CWS --> ETH
+                </div>
+            </div>
+            
+            <!-- Transaction Flow -->
+            <div id="flow" class="diagram-section">
+                <h2 class="diagram-title">Cross-Chain Transaction Flow</h2>
+                <p class="diagram-description">
+                    Complete sequence diagram showing how cross-chain transactions are processed through Gateway optimization and CCTP protocol.
+                </p>
+                <div class="mermaid">
+sequenceDiagram
+    participant User
+    participant SendForm
+    participant WalletContext
+    participant Gateway
+    participant CCTP
+    participant Circle
+    participant Blockchain
+
+    User->>SendForm: Enter transaction details
+    SendForm->>WalletContext: sendTransaction()
+    
+    alt Cross-Chain Transfer
+        WalletContext->>Gateway: findOptimalRoute()
+        Gateway-->>WalletContext: Route with protocol info
+        WalletContext->>WalletContext: Log Gateway route
+    end
+    
+    WalletContext->>Circle: POST /wallets/transfer
+    Circle-->>WalletContext: Transaction initiated
+    
+    alt Cross-Chain (CCTP)
+        WalletContext->>CCTP: trackCCTPTransaction()
+        CCTP->>Circle: getCCTPTransactionStatus()
+        Circle-->>CCTP: Status (PENDING_BURN)
+        CCTP->>Circle: Poll for attestation
+        Circle-->>CCTP: Status (COMPLETE)
+        CCTP-->>WalletContext: CCTP tracking complete
+    end
+    
+    WalletContext->>Blockchain: Monitor transaction
+    Blockchain-->>WalletContext: Confirmation
+    WalletContext-->>User: Transaction complete
+                </div>
+            </div>
+            
+            <!-- Components -->
+            <div id="components" class="diagram-section">
+                <h2 class="diagram-title">Component Architecture</h2>
+                <p class="diagram-description">
+                    React component hierarchy and service layer organization showing how different parts of the application communicate.
+                </p>
+                <div class="mermaid">
+graph LR
+    subgraph "React Components"
+        A[App Layout]
+        A --> B[WalletDashboard]
+        B --> C[WalletCard]
+        B --> D[SendForm]
+        B --> E[TransactionList]
+        D --> F[CCTPStatus]
+        E --> F
+    end
+    
+    subgraph "Context Providers"
+        WC[WalletContext]
+    end
+    
+    subgraph "Services"
+        S1[CircleWalletService]
+        S2[CCTPService]
+        S3[GatewayService]
+        S4[DatabaseService]
+    end
+    
+    B --> WC
+    C --> WC
+    D --> WC
+    E --> WC
+    
+    WC --> S1
+    WC --> S2
+    WC --> S3
+    WC --> S4
+                </div>
+            </div>
+            
+            <!-- Data Flow -->
+            <div id="dataflow" class="diagram-section">
+                <h2 class="diagram-title">Data Flow Architecture</h2>
+                <p class="diagram-description">
+                    How data flows from user actions through business logic, integration layers, and into persistence storage.
+                </p>
+                <div class="mermaid">
+graph TD
+    subgraph "User Actions"
+        CREATE[Create Wallet]
+        SEND[Send Transaction]
+        VIEW[View Balance]
+    end
+    
+    subgraph "Business Logic"
+        VALIDATE[Validation Layer]
+        ROUTE[Route Optimization]
+        ENCRYPT[Encryption Layer]
+    end
+    
+    subgraph "Integration Layer"
+        CIRCLE_API[Circle Direct API]
+        CCTP_API[CCTP Protocol]
+        GATEWAY_API[Gateway Router]
+        BLOCKCHAIN[Blockchain RPC]
+    end
+    
+    subgraph "Persistence"
+        DB_WALLET[Wallet Storage]
+        DB_TX[Transaction Storage]
+        DB_BALANCE[Balance Cache]
+    end
+    
+    CREATE --> VALIDATE
+    SEND --> VALIDATE
+    VIEW --> VALIDATE
+    
+    VALIDATE --> ROUTE
+    ROUTE --> ENCRYPT
+    
+    ENCRYPT --> CIRCLE_API
+    ENCRYPT --> GATEWAY_API
+    
+    CIRCLE_API --> CCTP_API
+    GATEWAY_API --> CCTP_API
+    
+    CCTP_API --> BLOCKCHAIN
+    CIRCLE_API --> BLOCKCHAIN
+    
+    BLOCKCHAIN --> DB_TX
+    CIRCLE_API --> DB_WALLET
+    BLOCKCHAIN --> DB_BALANCE
+                </div>
+            </div>
+            
+            <!-- Database Schema -->
+            <div id="database" class="diagram-section">
+                <h2 class="diagram-title">Database Schema</h2>
+                <p class="diagram-description">
+                    PostgreSQL database structure (diagram rendering issue - refer to ARCHITECTURE.md for details).
+                </p>
+            </div>
+            
+            <!-- Deployment -->
+            <div id="deployment" class="diagram-section">
+                <h2 class="diagram-title">Deployment Architecture</h2>
+                <p class="diagram-description">
+                    Infrastructure layout showing how the application is deployed and connects to external services and databases.
+                </p>
+                <div class="mermaid">
+graph TB
+    subgraph "Client Browser"
+        BROWSER[Next.js Client]
+    end
+    
+    subgraph "Vercel/Node Server"
+        APP[Next.js App]
+        API[API Routes]
+        SSR[Server-Side Rendering]
+    end
+    
+    subgraph "External Services"
+        CIRCLE_SVC[Circle API]
+        GATEWAY_SVC[Gateway.fm]
+        RPC[Blockchain RPCs]
+    end
+    
+    subgraph "Database"
+        POSTGRES[(PostgreSQL)]
+    end
+    
+    BROWSER <--> APP
+    APP <--> API
+    APP <--> SSR
+    
+    API <--> CIRCLE_SVC
+    API <--> GATEWAY_SVC
+    API <--> RPC
+    API <--> POSTGRES
+                </div>
+            </div>
+            
+            <!-- Tech Stack -->
+            <div id="tech" class="diagram-section">
+                <h2 class="diagram-title">Technology Stack</h2>
+                <p class="diagram-description">
+                    Complete list of technologies, frameworks, and services used in the Arc Cross-Chain Wallet.
+                </p>
+                
+                <div class="tech-stack">
+                    <div class="tech-card">
+                        <h3>Frontend</h3>
+                        <ul>
+                            <li>Next.js 14.2.33</li>
+                            <li>TypeScript</li>
+                            <li>React Context API</li>
+                            <li>Tailwind CSS</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>Backend Services</h3>
+                        <ul>
+                            <li>Circle Developer Wallets</li>
+                            <li>CCTP Protocol</li>
+                            <li>Gateway.fm Router</li>
+                            <li>PostgreSQL 18</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>Blockchain Networks</h3>
+                        <ul>
+                            <li>Arc Testnet</li>
+                            <li>Ethereum Sepolia</li>
+                            <li>Polygon Amoy</li>
+                            <li>Avalanche Fuji</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>Security</h3>
+                        <ul>
+                            <li>RSA-OAEP Encryption</li>
+                            <li>Circle API Keys</li>
+                            <li>Entity Secret Management</li>
+                            <li>Environment Variables</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>Key Features</h3>
+                        <ul>
+                            <li>Custodial Wallets</li>
+                            <li>Cross-Chain Transfers</li>
+                            <li>Route Optimization</li>
+                            <li>CCTP Status Tracking</li>
+                        </ul>
+                    </div>
+                    
+                    <div class="tech-card">
+                        <h3>Developer Tools</h3>
+                        <ul>
+                            <li>VS Code</li>
+                            <li>Git/GitHub</li>
+                            <li>npm/Node.js</li>
+                            <li>PostgreSQL CLI</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>Arc Cross-Chain Wallet • Built with Circle Developer Wallets, CCTP, and Gateway.fm</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">© 2025 • Hackathon Project</p>
+        </div>
+    </div>
+    
+    <script>
+        mermaid.initialize({ startOnLoad: true });
+        
+        function showDiagram(id) {
+            document.querySelectorAll('.diagram-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.nav button').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            document.getElementById(id).classList.add('active');
+            event.target.classList.add('active');
+        }
+    </script>
+</body>
+</html>

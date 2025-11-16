@@ -45,7 +45,8 @@ A comprehensive DeFi Cross Chain application with embedded wallet experience usi
 ### Integration Partners
 - **Circle Developer-Controlled Wallets**: Programmable wallet infrastructure
 - **Circle W3S API**: Direct API integration for wallet management
-- **Wagmi v1**: Ethereum React hooks for web3 connectivity
+- **Gateway.fm**: Cross-chain transaction routing and optimization
+- **CCTP**: Circle's Cross-Chain Transfer Protocol for native USDC transfers
 
 ## 🚀 Getting Started
 
@@ -120,23 +121,30 @@ Arc_Cross_Chain/
 │   │   │   └── wallets/        # Wallet API routes (POST/GET)
 │   │   ├── layout.tsx          # Root layout
 │   │   ├── page.tsx            # Main dashboard
-│   │   └── providers.tsx       # Wagmi provider
+│   │   └── providers.tsx       # React Query & Context providers
 │   ├── components/
 │   │   ├── wallet/
 │   │   │   ├── CreateWalletModal.tsx
 │   │   │   ├── WalletCard.tsx
-│   │   │   └── WalletDashboard.tsx
+│   │   │   ├── WalletDashboard.tsx
+│   │   │   ├── SendForm.tsx
+│   │   │   ├── TransactionList.tsx
+│   │   │   └── CCTPStatus.tsx  # CCTP UI components
 │   │   └── layout/             # Header, Footer components
 │   ├── lib/
 │   │   ├── circle-direct.ts    # Direct Circle API client
 │   │   ├── circle-working.ts   # Frontend Circle service
-│   │   ├── wallet-storage.ts   # In-memory wallet storage
-│   │   └── wagmi.ts            # Wagmi configuration
+│   │   ├── cctp.ts             # CCTP service
+│   │   ├── gateway.ts          # Gateway service
+│   │   ├── database.ts         # PostgreSQL integration
+│   │   └── blockchain-balance.ts # Blockchain queries
 │   ├── types/                  # TypeScript definitions
-│   └── context/                # React context
+│   └── context/                # React context (WalletContext)
 ├── scripts/
 │   └── generate-circle-entity-secret.js
 ├── doc/                        # Documentation files
+│   ├── CCTP_INTEGRATION.md
+│   └── Gateway.md
 └── .env                        # Environment variables
 ```
 

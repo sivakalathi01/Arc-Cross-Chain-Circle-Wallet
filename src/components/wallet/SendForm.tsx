@@ -212,11 +212,6 @@ export function SendForm() {
               )}
             </div>
           )}
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         <div>

@@ -1,8 +1,6 @@
 'use client'
 
 import { QueryClient, QueryClientProvider } from 'react-query'
-import { WagmiConfig } from 'wagmi'
-import { config } from '@/lib/wagmi'
 import { WalletProvider } from '@/context/WalletContext'
 import { useState } from 'react'
 
@@ -17,12 +15,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   }))
 
   return (
-    <WagmiConfig config={config}>
-      <QueryClientProvider client={queryClient}>
-        <WalletProvider>
-          {children}
-        </WalletProvider>
-      </QueryClientProvider>
-    </WagmiConfig>
+    <QueryClientProvider client={queryClient}>
+      <WalletProvider>
+        {children}
+      </WalletProvider>
+    </QueryClientProvider>
   )
 }
