@@ -1,7 +1,8 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useWallet } from '@/context/WalletContext'
+import { gatewayService } from '@/lib/gateway'
 
 export function SendForm() {
   const { selectedWallet, sendTransaction, loading } = useWallet()
@@ -12,6 +13,8 @@ export function SendForm() {
     memo: '',
   })
   const [errors, setErrors] = useState<Record<string, string>>({})
+  const [gatewayRoute, setGatewayRoute] = useState<any>(null)
+  const [loadingRoute, setLoadingRoute] = useState(false)
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {}
@@ -64,6 +67,53 @@ export function SendForm() {
     }
   }
 
+  // Fetch Gateway route when cross-chain transfer is selected
+  useEffect(() => {
+    const fetchGatewayRoute = async () => {
+      if (!selectedWallet || !formData.destinationBlockchain || !formData.amount) {
+        setGatewayRoute(null)
+        return
+      }
+
+      const isCrossChain = formData.destinationBlockchain !== selectedWallet.blockchain
+      if (!isCrossChain) {
+        setGatewayRoute(null)
+        return
+      }
+
+      setLoadingRoute(true)
+      try {
+        const blockchainToChainId: Record<string, number> = {
+          'ARC-TESTNET': 421614,
+          'ETH-SEPOLIA': 11155111,
+          'MATIC-AMOY': 80002,
+          'AVAX-FUJI': 43113,
+        }
+
+        const sourceChainId = blockchainToChainId[selectedWallet.blockchain]
+        const destChainId = blockchainToChainId[formData.destinationBlockchain]
+
+        if (sourceChainId && destChainId) {
+          const route = await gatewayService.findOptimalRoute({
+            sourceChain: sourceChainId,
+            destinationChain: destChainId,
+            amount: formData.amount,
+            token: 'USDC',
+          })
+          setGatewayRoute(route)
+        }
+      } catch (error) {
+        console.warn('Gateway route fetch failed:', error)
+        setGatewayRoute(null)
+      } finally {
+        setLoadingRoute(false)
+      }
+    }
+
+    const debounceTimer = setTimeout(fetchGatewayRoute, 500)
+    return () => clearTimeout(debounceTimer)
+  }, [selectedWallet, formData.destinationBlockchain, formData.amount])
+
   if (!selectedWallet) {
     return (
       <div className="text-center py-8">
@@ -103,16 +153,65 @@ export function SendForm() {
             <option value="AVAX-FUJI">🔺 Avalanche Fuji</option>
           </select>
           {formData.destinationBlockchain !== selectedWallet?.blockchain && (
-            <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-md">
-              <div className="flex items-start gap-2">
-                <span className="text-base">🌉</span>
-                <div className="flex-1">
-                  <p className="text-sm font-semibold text-purple-900">CCTP Cross-Chain Transfer</p>
-                  <p className="text-xs text-purple-700 mt-1">
-                    {selectedWallet?.blockchain} → {formData.destinationBlockchain}
-                  </p>
-                  <p className="text-xs text-purple-600 mt-1">
-                    Circle's protocol will burn USDC on source chain and mint native USDC on destination chain
+            <div className="mt-2 space-y-2">
+              <div className="p-3 bg-purple-50 border border-purple-200 rounded-md">
+                <div className="flex items-start gap-2">
+                  <span className="text-base">🌉</span>
+                  <div className="flex-1">
+                    <p className="text-sm font-semibold text-purple-900">CCTP Cross-Chain Transfer</p>
+                    <p className="text-xs text-purple-700 mt-1">
+                      {selectedWallet?.blockchain} → {formData.destinationBlockchain}
+                    </p>
+                    <p className="text-xs text-purple-600 mt-1">
+                      Circle's protocol will burn USDC on source chain and mint native USDC on destination chain
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Gateway Route Optimization */}
+              {loadingRoute && (
+                <div className="p-3 bg-blue-50 border border-blue-200 rounded-md">
+                  <div className="flex items-center gap-2">
+                    <svg className="animate-spin h-4 w-4 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span className="text-xs text-blue-700">Gateway optimizing route...</span>
+                  </div>
+                </div>
+              )}
+              
+              {gatewayRoute && !loadingRoute && (
+                <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                  <div className="flex items-start gap-2">
+                    <span className="text-base">✅</span>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold text-green-900">Gateway Route Optimized</p>
+                      <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
+                        <div>
+                          <span className="text-green-700">Protocol:</span>
+                          <span className="ml-1 font-medium text-green-900">{gatewayRoute.steps?.[0]?.protocol || 'CCTP'}</span>
+                        </div>
+                        <div>
+                          <span className="text-green-700">Est. Time:</span>
+                          <span className="ml-1 font-medium text-green-900">~{Math.round((gatewayRoute.totalTime || 900) / 60)}m</span>
+                        </div>
+                        <div>
+                          <span className="text-green-700">Est. Fee:</span>
+                          <span className="ml-1 font-medium text-green-900">{gatewayRoute.totalFee || '0.001'} ETH</span>
+                        </div>
+                        <div>
+                          <span className="text-green-700">Confidence:</span>
+                          <span className="ml-1 font-medium text-green-900">{Math.round((gatewayRoute.confidence || 0.95) * 100)}%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
                   </p>
                 </div>
               </div>

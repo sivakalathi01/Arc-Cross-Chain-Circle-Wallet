@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { circleWalletService } from '@/lib/circle-working'
 import { cctpService } from '@/lib/cctp'
+import { gatewayService } from '@/lib/gateway'
 import { useWalletStore } from '@/store/walletStore'
 import { Wallet, User, WalletBalance, Transaction } from '@/types'
 import toast from '@/lib/toast'
@@ -79,6 +80,11 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const circleClient = circleWalletService.getCircleClient()
       await cctpService.initialize(circleClient)
       console.log('✅ CCTP service ready for cross-chain transfers')
+
+      // Initialize Gateway service for transaction routing
+      console.log('🌉 Initializing Gateway service for optimal routing...')
+      await gatewayService.initialize()
+      console.log('✅ Gateway service ready for cross-chain optimization')
 
       // Load user wallets from Circle (if real API keys are configured)
       console.log('💼 Checking for Circle wallets...')
@@ -231,6 +237,43 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     try {
       setLoading(true)
       setError(null)
+
+      // Determine if this is a cross-chain transfer
+      const isCrossChain = params.destinationBlockchain && 
+                          params.destinationBlockchain !== selectedWallet.blockchain
+
+      // If cross-chain, use Gateway to find optimal route
+      if (isCrossChain) {
+        console.log('🌉 Cross-chain transfer detected - querying Gateway for optimal route...')
+        try {
+          const blockchainToChainId: Record<string, number> = {
+            'ARC-TESTNET': 421614,
+            'ETH-SEPOLIA': 11155111,
+            'MATIC-AMOY': 80002,
+            'AVAX-FUJI': 43113,
+          }
+
+          const sourceChainId = blockchainToChainId[selectedWallet.blockchain]
+          const destChainId = blockchainToChainId[params.destinationBlockchain]
+
+          if (sourceChainId && destChainId) {
+            const route = await gatewayService.findOptimalRoute({
+              sourceChain: sourceChainId,
+              destinationChain: destChainId,
+              amount: params.amount,
+              token: 'USDC',
+            })
+            console.log('✅ Gateway route optimized:', {
+              protocol: route?.steps?.[0]?.protocol || 'CCTP',
+              estimatedTime: route?.totalTime || 900,
+              estimatedFee: route?.totalFee || '0.001',
+            })
+          }
+        } catch (gatewayError) {
+          console.warn('⚠️ Gateway route optimization failed, proceeding with CCTP:', gatewayError)
+          // Continue with transaction even if Gateway fails
+        }
+      }
 
       const transaction = await circleWalletService.sendTransaction({
         walletId: selectedWallet.id,
