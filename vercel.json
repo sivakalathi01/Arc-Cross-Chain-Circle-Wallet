@@ -4,17 +4,5 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "nextjs",
-  "regions": ["iad1"],
-  "env": {
-    "CIRCLE_API_KEY": "@circle_api_key",
-    "CIRCLE_CLIENT_KEY": "@circle_client_key",
-    "CIRCLE_ENTITY_SECRET": "@circle_entity_secret",
-    "CIRCLE_BASE_URL": "https://api.circle.com",
-    "DATABASE_URL": "@database_url"
-  },
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_APP_URL": "https://arc-cross-chain-wallet.vercel.app"
-    }
-  }
+  "regions": ["iad1"]
 }

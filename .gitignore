@@ -89,3 +89,4 @@ artifacts/
 # Temporary folders
 tmp/
 temp/
+.vercel
