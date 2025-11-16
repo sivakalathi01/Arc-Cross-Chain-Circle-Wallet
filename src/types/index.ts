@@ -41,6 +41,10 @@ export interface Transaction {
   state: 'QUEUED' | 'SENT' | 'CONFIRMED' | 'COMPLETE' | 'FAILED' | 'CANCELLED'
   amounts: string[]
   txHash?: string
+  destinationChain?: string // For CCTP cross-chain transfers
+  destinationTxHash?: string // CCTP mint transaction hash on destination chain
+  attestationHash?: string // CCTP attestation signature
+  messageHash?: string // CCTP message hash
   blockHeight?: number
   blockHash?: string
   abiParameters?: any

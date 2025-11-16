@@ -113,9 +113,14 @@ export function TransactionList({ transactions, loading, onLoadMore, hasMore }: 
                 {getTransactionIcon(transaction.transactionType)}
               </div>
               <div>
-                <p className="font-medium text-gray-900">
-                  {transaction.transactionType === 'INBOUND' ? 'Received' : 'Sent'}
-                </p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-gray-900">
+                    {transaction.transactionType === 'INBOUND' ? 'Received' : 'Sent'}
+                  </p>
+                  {transaction.destinationChain && transaction.destinationChain !== transaction.blockchain && (
+                    <CCTPBadge isCrossChain={true} />
+                  )}
+                </div>
                 <div className="flex items-center space-x-2 text-sm text-gray-500">
                   <span>
                     {transaction.transactionType === 'INBOUND' 
@@ -123,6 +128,15 @@ export function TransactionList({ transactions, loading, onLoadMore, hasMore }: 
                       : `To ${transaction.destinationAddress?.slice(0, 6)}...${transaction.destinationAddress?.slice(-4)}`
                     }
                   </span>
+                  {/* Show cross-chain route for CCTP transfers */}
+                  {transaction.destinationChain && transaction.destinationChain !== transaction.blockchain && (
+                    <>
+                      <span>•</span>
+                      <span className="text-purple-600 font-medium text-xs">
+                        {transaction.blockchain} → {transaction.destinationChain}
+                      </span>
+                    </>
+                  )}
                   {transaction.txHash && transaction.blockchain && (
                     <>
                       <span>•</span>
@@ -131,9 +145,27 @@ export function TransactionList({ transactions, loading, onLoadMore, hasMore }: 
                         target="_blank"
                         rel="noopener noreferrer"
                         className="text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                        title={`View on ${getExplorerName(transaction.blockchain)}`}
+                        title={`View source transaction on ${getExplorerName(transaction.blockchain)}`}
                       >
-                        <span>View on {getExplorerName(transaction.blockchain)}</span>
+                        <span>Source TX</span>
+                        <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                        </svg>
+                      </a>
+                    </>
+                  )}
+                  {/* Show destination transaction for CCTP */}
+                  {transaction.destinationTxHash && transaction.destinationChain && (
+                    <>
+                      <span>•</span>
+                      <a
+                        href={getExplorerUrl(transaction.destinationChain, 'tx', transaction.destinationTxHash)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-green-600 hover:text-green-800 flex items-center gap-1"
+                        title={`View mint transaction on ${getExplorerName(transaction.destinationChain)}`}
+                      >
+                        <span>Mint TX</span>
                         <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
                         </svg>
@@ -167,25 +199,27 @@ export function TransactionList({ transactions, loading, onLoadMore, hasMore }: 
                 {transaction.amounts?.[0] ? parseFloat(transaction.amounts[0]).toLocaleString() : '0'} USDC
               </p>
               <div className="flex items-center justify-end space-x-2 mb-1">
-                <CCTPBadge 
-                  isCrossChain={transaction.blockchain !== transaction.destinationChain && !!transaction.destinationChain} 
-                />
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(transaction.state)}`}
                 >
                   {transaction.state.toLowerCase()}
                 </span>
               </div>
-              <div className="mb-1">
-                <CCTPStatusIndicator
-                  status={transaction.state}
-                  isCrossChain={transaction.blockchain !== transaction.destinationChain && !!transaction.destinationChain}
-                  blockchain={transaction.blockchain}
-                  destinationChain={transaction.destinationChain}
-                />
-              </div>
+              {/* Show CCTP status for cross-chain transfers */}
+              {transaction.destinationChain && transaction.destinationChain !== transaction.blockchain && (
+                <div className="mb-1 flex justify-end">
+                  <CCTPStatusIndicator
+                    status={transaction.state}
+                    isCrossChain={true}
+                    blockchain={transaction.blockchain}
+                    destinationChain={transaction.destinationChain}
+                  />
+                </div>
+              )}
               <span className="text-xs text-gray-500">
                 {new Date(transaction.createDate).toLocaleDateString()}
+              </span>
+            </div>
               </span>
             </div>
           </div>

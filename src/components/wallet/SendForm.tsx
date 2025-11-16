@@ -103,9 +103,20 @@ export function SendForm() {
             <option value="AVAX-FUJI">🔺 Avalanche Fuji</option>
           </select>
           {formData.destinationBlockchain !== selectedWallet?.blockchain && (
-            <p className="mt-1 text-xs text-orange-600">
-              ⚠️ Cross-chain transfer: {selectedWallet?.blockchain} → {formData.destinationBlockchain}
-            </p>
+            <div className="mt-2 p-3 bg-purple-50 border border-purple-200 rounded-md">
+              <div className="flex items-start gap-2">
+                <span className="text-base">🌉</span>
+                <div className="flex-1">
+                  <p className="text-sm font-semibold text-purple-900">CCTP Cross-Chain Transfer</p>
+                  <p className="text-xs text-purple-700 mt-1">
+                    {selectedWallet?.blockchain} → {formData.destinationBlockchain}
+                  </p>
+                  <p className="text-xs text-purple-600 mt-1">
+                    Circle's protocol will burn USDC on source chain and mint native USDC on destination chain
+                  </p>
+                </div>
+              </div>
+            </div>
           )}
         </div>
 

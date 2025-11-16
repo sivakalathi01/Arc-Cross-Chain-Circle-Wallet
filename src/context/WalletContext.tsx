@@ -240,10 +240,14 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         tokenAddress: params.tokenAddress,
       })
 
+      // Determine if this is a cross-chain CCTP transfer
+      const isCrossChain = params.destinationBlockchain && 
+                          params.destinationBlockchain !== selectedWallet.blockchain
+
       // Construct a complete transaction object from the response
       const completeTransaction: Transaction = {
         id: transaction.id,
-        blockchain: params.destinationBlockchain || selectedWallet.blockchain,
+        blockchain: selectedWallet.blockchain, // Source blockchain
         tokenId: params.tokenAddress || '',
         walletId: selectedWallet.id,
         sourceAddress: selectedWallet.address,
@@ -253,9 +257,18 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
         state: transaction.state || 'INITIATED',
         amounts: [params.amount],
         txHash: transaction.txHash,
+        // CCTP-specific fields
+        destinationChain: isCrossChain ? params.destinationBlockchain : undefined,
+        destinationTxHash: transaction.destinationTxHash,
+        attestationHash: transaction.attestationHash,
+        messageHash: transaction.messageHash,
         operation: 'TRANSFER' as any,
         updateDate: new Date().toISOString(),
         createDate: new Date().toISOString(),
+      }
+
+      if (isCrossChain) {
+        console.log(`🌉 CCTP cross-chain transaction created: ${selectedWallet.blockchain} → ${params.destinationBlockchain}`)
       }
 
       addTransaction(completeTransaction)
