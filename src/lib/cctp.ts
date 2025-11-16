@@ -1,21 +1,29 @@
 import { CCTPSDKService, mockEthers as ethers } from './mocks/cctp-sdk'
-import { CCTPConfig, CrossChainTransfer } from '@/types'
+import { CCTPConfig, CrossChainTransfer, CCTPTransactionState } from '@/types'
+import { CircleDirectClient } from './circle-direct'
 
 class CCTPService {
   private sdk: CCTPSDKService | null = null
   private config: CCTPConfig
+  private circleClient: CircleDirectClient | null = null
 
   constructor(config: CCTPConfig) {
     this.config = config
   }
 
-  async initialize(): Promise<void> {
+  // Initialize CCTP service with Circle API integration
+  async initialize(circleClient?: CircleDirectClient): Promise<void> {
     if (this.sdk) return
 
     this.sdk = new CCTPSDKService({
       chains: this.config.chains,
       tokens: this.config.tokens,
     })
+
+    if (circleClient) {
+      this.circleClient = circleClient
+      console.log('🔗 CCTP Service initialized with Circle API integration')
+    }
   }
 
   async initiateCrossChainTransfer(params: {
@@ -80,16 +88,88 @@ class CCTPService {
     if (!this.sdk) throw new Error('CCTP SDK not initialized')
 
     try {
+      console.log('🔍 Fetching CCTP attestation for transaction:', sourceTxHash)
+      
       const attestation = await this.sdk.getAttestation({
         transactionHash: sourceTxHash,
         sourceChain,
       })
 
+      if (attestation) {
+        console.log('✅ CCTP Attestation received:', attestation.slice(0, 20) + '...')
+      }
+
       return attestation
     } catch (error) {
-      console.error('Error getting attestation:', error)
+      console.error('Error getting CCTP attestation:', error)
       return null
     }
+  }
+
+  // Track CCTP transaction state using Circle API
+  async trackCCTPTransaction(transactionId: string): Promise<CCTPTransactionState | null> {
+    if (!this.circleClient) {
+      console.warn('⚠️ Circle client not available for CCTP tracking')
+      return null
+    }
+
+    try {
+      const txData = await this.circleClient.getCCTPTransactionStatus(transactionId)
+      const transaction = txData?.transaction
+
+      if (!transaction) return null
+
+      // Map Circle transaction state to CCTP state
+      const cctpState: CCTPTransactionState = {
+        transactionId: transaction.id,
+        sourceTxHash: transaction.txHash,
+        destinationTxHash: transaction.destinationTxHash,
+        attestationHash: transaction.attestationHash,
+        messageHash: transaction.messageHash,
+        status: this.mapCircleStateToCCTP(transaction.state, transaction),
+        sourceChain: transaction.blockchain || 'UNKNOWN',
+        destinationChain: transaction.destinationChain || transaction.blockchain || 'UNKNOWN',
+        amount: transaction.amounts?.[0] || '0',
+        createdAt: transaction.createDate,
+        updatedAt: transaction.updateDate,
+      }
+
+      return cctpState
+    } catch (error) {
+      console.error('Error tracking CCTP transaction:', error)
+      return null
+    }
+  }
+
+  // Map Circle's transaction states to CCTP burn/mint flow states
+  private mapCircleStateToCCTP(state: string, transaction: any): CCTPTransactionState['status'] {
+    // Circle states: INITIATED, PENDING_RISK_SCREENING, QUEUED, SENT, CONFIRMED, COMPLETE, FAILED, DENIED
+    
+    if (state === 'FAILED' || state === 'DENIED') {
+      return 'FAILED'
+    }
+
+    const hasSourceTx = !!transaction.txHash
+    const hasAttestation = !!transaction.attestationHash
+    const hasDestinationTx = !!transaction.destinationTxHash
+
+    if (state === 'COMPLETE' && hasDestinationTx) {
+      return 'MINT_COMPLETE'
+    }
+
+    if (hasAttestation && !hasDestinationTx) {
+      return 'ATTESTATION_READY'
+    }
+
+    if (hasSourceTx && !hasAttestation) {
+      return 'BURN_COMPLETE'
+    }
+
+    if (state === 'SENT' || state === 'QUEUED') {
+      return 'PENDING_BURN'
+    }
+
+    return 'PENDING_BURN'
   }
 
   async completeCrossChainTransfer(params: {

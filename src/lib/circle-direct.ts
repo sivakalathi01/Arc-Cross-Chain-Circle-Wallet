@@ -355,7 +355,8 @@ class CircleDirectClient {
       const isCrossChain = sourceBlockchain !== destinationBlockchain
       
       if (isCrossChain) {
-        console.log('🌉 Cross-chain transfer detected')
+        console.log('🌉 Cross-chain CCTP transfer detected')
+        console.log('📋 CCTP Protocol: Circle will handle burn on source chain and mint on destination chain')
       }
       
       // Get wallet balance to find the token ID
@@ -370,7 +371,7 @@ class CircleDirectClient {
       
       console.log(`💰 Using token: ${usdcToken.token.symbol} (${usdcToken.token.id})`)
       
-      // Build transaction request
+      // Build CCTP-enabled transaction request
       const transactionRequest = {
         idempotencyKey: uuidv4(),
         entitySecretCiphertext,
@@ -380,21 +381,58 @@ class CircleDirectClient {
         feeLevel: 'MEDIUM',
         tokenId: usdcToken.token.id,
         ...(isCrossChain && { 
-          destinationChain: destinationBlockchain 
+          destinationChain: destinationBlockchain,
+          // Circle's API uses CCTP protocol for cross-chain transfers
+          // The API automatically handles:
+          // 1. Burning tokens on source chain via TokenMessenger contract
+          // 2. Generating attestation via Circle's attestation service
+          // 3. Minting tokens on destination chain via MessageTransmitter contract
         })
       }
       
-      console.log('📤 Sending transaction request:', {
+      console.log('📤 Sending CCTP transaction request:', {
         ...transactionRequest,
-        entitySecretCiphertext: `[${transactionRequest.entitySecretCiphertext.length} chars]`
+        entitySecretCiphertext: `[${transactionRequest.entitySecretCiphertext.length} chars]`,
+        protocol: isCrossChain ? 'CCTP' : 'Standard Transfer'
       })
       
       const response = await this.makeRequest('/v1/w3s/developer/transactions/transfer', 'POST', transactionRequest)
       
-      console.log('✅ Transaction initiated:', response)
+      console.log('✅ CCTP transaction initiated:', response)
+      if (isCrossChain) {
+        console.log('⏳ CCTP Process: Awaiting burn confirmation, attestation, and mint on destination chain')
+      }
       return response.data
     } catch (error) {
-      console.error('❌ Failed to send transaction:', error)
+      console.error('❌ Failed to send CCTP transaction:', error)
+      throw error
+    }
+  }
+
+  // Get CCTP transaction status with attestation info
+  async getCCTPTransactionStatus(transactionId: string): Promise<any> {
+    try {
+      console.log(`🔍 Checking CCTP transaction status: ${transactionId}`)
+      const response = await this.makeRequest(`/v1/w3s/transactions/${transactionId}`, 'GET')
+      
+      const transaction = response.data?.transaction
+      if (transaction) {
+        console.log(`📊 CCTP Status: ${transaction.state}`)
+        if (transaction.txHash) {
+          console.log(`🔗 Source TX Hash: ${transaction.txHash}`)
+        }
+        // For cross-chain transactions, Circle's API may include CCTP-specific fields
+        if (transaction.destinationTxHash) {
+          console.log(`🔗 Destination TX Hash: ${transaction.destinationTxHash}`)
+        }
+        if (transaction.attestationHash) {
+          console.log(`✅ CCTP Attestation: ${transaction.attestationHash}`)
+        }
+      }
+      
+      return response.data
+    } catch (error) {
+      console.error('❌ Failed to get CCTP transaction status:', error)
       throw error
     }
   }

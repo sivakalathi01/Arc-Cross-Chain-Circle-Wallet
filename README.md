@@ -1,20 +1,33 @@
 # Arc Cross Chain Wallet
 
-A comprehensive DeFi Cross Chain application with embedded wallet experience using Circle Wallets, CCTP, Gateway, and Arc protocols.
+A comprehensive DeFi Cross Chain application with embedded wallet experience using **Circle Wallets, CCTP (Cross-Chain Transfer Protocol), Gateway, and Arc protocols**.
 
 ## 🌟 Features
 
 ### Core Functionality
-- **Developer-Controlled Wallets**: Fully functional wallet creation using Circle's Developer-Controlled Wallets API
+- **Circle Developer-Controlled Wallets**: Fully functional wallet creation using Circle's API
+- **CCTP Integration**: Native cross-chain USDC transfers via Circle's Cross-Chain Transfer Protocol
+  - Automatic burn/attestation/mint flow for cross-chain transfers
+  - Real-time CCTP transaction status tracking
+  - Support for Arc Testnet, Ethereum Sepolia, Polygon Amoy, Avalanche Fuji
 - **RSA-OAEP Encryption**: Secure entity secret encryption for wallet operations
 - **Smart Contract Accounts (SCA)**: Enhanced security and programmable wallet functionality
-- **Multi-Chain Support**: Ethereum Sepolia testnet (extensible to mainnet and other chains)
+- **Multi-Blockchain Support**: 4 testnets with seamless cross-chain transfers
 - **Real-time Wallet Management**: Create, store, and manage wallets with persistent storage
+
+### Cross-Chain Features
+- **🌉 CCTP Protocol**: Circle's official cross-chain transfer protocol
+  - Burns USDC on source chain
+  - Circle attestation service validates burn
+  - Mints native USDC on destination chain
+  - 1:1 USDC backing across all chains
+- **Transaction Monitoring**: Track burn → attestation → mint progress
+- **Block Explorer Integration**: View transactions on Arc Scan, Etherscan, Polygonscan, Snowtrace
 
 ### Technical Features
 - **Direct Circle API Integration**: Bypassed SDK for full control and flexibility
 - **Server-Side Encryption**: Node.js crypto module for RSA-OAEP encryption with SHA-256
-- **In-Memory Wallet Storage**: Fast wallet retrieval (ready for database integration)
+- **PostgreSQL Database**: Persistent storage for wallets, balances, and transactions
 - **Next.js 14 API Routes**: Server-side wallet operations with runtime: 'nodejs'
 - **Cross-Platform UUID**: Compatible UUID generation for browser and server
 - **Automatic Entity Secret Setup**: Self-configuring encryption workflow

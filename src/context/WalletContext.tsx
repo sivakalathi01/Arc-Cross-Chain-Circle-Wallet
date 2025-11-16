@@ -75,8 +75,10 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       console.log('📡 Connecting to Circle testnet service...')
       await circleWalletService.initialize()
       
-      console.log('🌐 Connecting to CCTP service...')
-      await cctpService.initialize()
+      console.log('🌐 Connecting to CCTP service with Circle API integration...')
+      const circleClient = circleWalletService.getCircleClient()
+      await cctpService.initialize(circleClient)
+      console.log('✅ CCTP service ready for cross-chain transfers')
 
       // Load user wallets from Circle (if real API keys are configured)
       console.log('💼 Checking for Circle wallets...')

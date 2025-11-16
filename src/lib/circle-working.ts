@@ -286,6 +286,11 @@ class CircleWalletService {
   getCurrentUser(): CircleUser | null {
     return this.currentUser
   }
+
+  // Get the Circle Direct API client for CCTP integration
+  getCircleClient(): CircleDirectClient | null {
+    return this.directClient
+  }
 }
 
 // Export service instances with proper configuration

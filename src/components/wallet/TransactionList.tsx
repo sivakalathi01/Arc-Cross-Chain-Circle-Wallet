@@ -2,6 +2,7 @@
 
 import { Transaction } from '@/types'
 import { getExplorerUrl, getExplorerName } from '@/lib/block-explorer'
+import { CCTPBadge, CCTPStatusIndicator } from './CCTPStatus'
 
 interface TransactionListProps {
   transactions: Transaction[]
@@ -165,16 +166,27 @@ export function TransactionList({ transactions, loading, onLoadMore, hasMore }: 
                 {transaction.transactionType === 'INBOUND' ? '+' : '-'}
                 {transaction.amounts?.[0] ? parseFloat(transaction.amounts[0]).toLocaleString() : '0'} USDC
               </p>
-              <div className="flex items-center space-x-2">
+              <div className="flex items-center justify-end space-x-2 mb-1">
+                <CCTPBadge 
+                  isCrossChain={transaction.blockchain !== transaction.destinationChain && !!transaction.destinationChain} 
+                />
                 <span
                   className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(transaction.state)}`}
                 >
                   {transaction.state.toLowerCase()}
                 </span>
-                <span className="text-xs text-gray-500">
-                  {new Date(transaction.createDate).toLocaleDateString()}
-                </span>
               </div>
+              <div className="mb-1">
+                <CCTPStatusIndicator
+                  status={transaction.state}
+                  isCrossChain={transaction.blockchain !== transaction.destinationChain && !!transaction.destinationChain}
+                  blockchain={transaction.blockchain}
+                  destinationChain={transaction.destinationChain}
+                />
+              </div>
+              <span className="text-xs text-gray-500">
+                {new Date(transaction.createDate).toLocaleDateString()}
+              </span>
             </div>
           </div>
         </div>

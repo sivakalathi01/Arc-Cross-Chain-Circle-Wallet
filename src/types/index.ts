@@ -218,6 +218,21 @@ export interface CCTPToken {
   decimals: number
 }
 
+// CCTP Transaction State for tracking burn/attestation/mint flow
+export interface CCTPTransactionState {
+  transactionId: string
+  sourceTxHash?: string
+  destinationTxHash?: string
+  attestationHash?: string
+  messageHash?: string
+  status: 'PENDING_BURN' | 'BURN_COMPLETE' | 'ATTESTATION_PENDING' | 'ATTESTATION_READY' | 'MINT_PENDING' | 'MINT_COMPLETE' | 'FAILED'
+  sourceChain: string
+  destinationChain: string
+  amount: string
+  createdAt: string
+  updatedAt: string
+}
+
 // Gateway types
 export interface GatewayConfig {
   apiKey: string
