@@ -103,7 +103,7 @@ export function WalletDashboard() {
                   ? 'bg-blue-600 hover:bg-blue-700 focus:ring-blue-500' 
                   : 'bg-orange-500 hover:bg-orange-600 focus:ring-orange-500'
               }`}
-              title={circleConfig.hasApiKeys ? 'Create Circle Wallet' : 'Requires Circle API keys - Use MetaMask instead'}
+              title={circleConfig.hasApiKeys ? 'Create Circle Wallet' : 'Requires Circle API keys'}
             >
               <Plus className="h-4 w-4 mr-1" />
               {circleConfig.hasApiKeys ? 'Create Wallet' : 'Create Wallet (API Keys Required)'}
