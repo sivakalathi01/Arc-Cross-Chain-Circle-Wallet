@@ -82,7 +82,7 @@ A comprehensive DeFi Cross Chain wallet application demonstrating seamless USDC 
 
 ### Solution
 - Unified cross-chain wallet interface
-- Embedded wallet (no MetaMask dependency)
+- Embedded wallet (Circle Developer-Controlled Wallets)
 - Integrated DeFi opportunities
 - Seamless USDC cross-chain transfers
 

@@ -97,7 +97,7 @@ project/
 │   └── lib/
 │       ├── circle.ts            # ✅ Client-side Circle service
 │       ├── circle-server.ts     # ✅ Server-side Circle service
-│       ├── wagmi.ts            # ✅ MetaMask integration
+│       ├── circle-direct.ts    # ✅ Direct Circle API integration
 │       └── cctp.ts             # ✅ Cross-chain transfers
 ├── .env.local                   # ✅ Server-side environment variables
 └── package.json                 # ✅ Both Circle SDKs installed
@@ -188,11 +188,11 @@ src/app/api/
 - **Transaction Creation**: Server-side transaction handling
 - **Security**: API keys never exposed to client
 - **Error Handling**: Comprehensive error management
-- **MetaMask Integration**: Works alongside Circle wallets
+- **Circle Developer-Controlled Wallets**: Fully functional with RSA-OAEP encryption
 
 ### 🔑 **Usage**
 - **With Circle API Keys**: Full Circle wallet functionality
-- **Without API Keys**: Graceful fallback to MetaMask mode
+- **Without API Keys**: Clear error messages guiding users to add Circle API keys
 - **Developer Experience**: Simple integration, clear documentation
 
 The server-side Circle W3S implementation is now **complete and production-ready**! 🎉

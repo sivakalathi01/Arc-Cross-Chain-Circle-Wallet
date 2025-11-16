@@ -41,10 +41,10 @@ Open these URLs in your browser:
    - Compare with Circle Direct results
 
 ### Phase 2: Frontend Testing
-1. **Connect MetaMask** - Test wallet connection
-2. **Create Circle Wallet** - Test wallet creation flow
-3. **Check Balances** - View USDC balances
-4. **Send Transactions** - Test USDC transfers
+1. **Create Circle Wallet** - Test multi-blockchain wallet creation
+2. **Check Balances** - View USDC balances from blockchain
+3. **Send Transactions** - Test cross-chain USDC transfers
+4. **View Explorer** - Check transactions on block explorers
 
 ## PowerShell Testing Commands
 
