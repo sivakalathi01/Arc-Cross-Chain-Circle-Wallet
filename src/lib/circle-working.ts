@@ -77,9 +77,10 @@ class CircleWalletService {
   }
   
   // Create wallet using working direct API approach
-  async createWallet(name?: string): Promise<any> {
+  async createWallet(name?: string, blockchain?: string): Promise<any> {
     try {
       console.log('💼 Creating Circle wallet via API...')
+      console.log('🟡 Circle Working: Received blockchain:', blockchain)
       
       // Call the server-side API route which handles encryption properly
       const response = await fetch('/api/wallets', {
@@ -87,7 +88,10 @@ class CircleWalletService {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ name: name || 'My Wallet' }),
+        body: JSON.stringify({ 
+          name: name || 'My Wallet',
+          blockchain: blockchain || 'ARB-SEPOLIA'
+        }),
       })
 
       if (!response.ok) {
@@ -132,23 +136,26 @@ class CircleWalletService {
       })
 
       if (!response.ok) {
-        console.error('Failed to fetch wallets:', response.statusText)
+        console.error('❌ Failed to fetch wallets:', response.statusText)
         return []
       }
 
       const result = await response.json()
+      console.log('📦 API Response:', result)
       
       if (result.success && result.data?.wallets) {
         console.log(`✅ Found ${result.data.wallets.length} Circle wallet(s)`)
-        return result.data.wallets.map((w: any) => ({
+        const wallets = result.data.wallets.map((w: any) => ({
           id: w.id,
-          name: `Circle Wallet`,
+          name: w.name || 'Circle Wallet',
           address: w.address,
           blockchain: w.blockchain,
           type: 'circle' as const,
           balances: [],
-          createDate: w.createDate
+          createDate: w.createDate || w.create_date
         }))
+        console.log('📋 Mapped wallets:', wallets)
+        return wallets
       }
       
       console.log('📭 No Circle wallets found')
@@ -181,8 +188,42 @@ class CircleWalletService {
   
   // Placeholder methods for compatibility (implement as needed)
   async getWalletBalances(walletId: string): Promise<any[]> {
-    console.log('💰 Getting wallet balances for:', walletId)
-    return []
+    try {
+      console.log('💰 Getting wallet balances for:', walletId)
+      
+      const response = await fetch(`/api/wallets/${walletId}/balances`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to fetch balances')
+      }
+
+      const result = await response.json()
+      console.log('✅ Balances fetched:', result.data)
+      
+      // Transform Circle API response to our format
+      const balances = result.data?.tokenBalances?.map((balance: any) => ({
+        token: {
+          id: balance.token.id,
+          name: balance.token.name,
+          symbol: balance.token.symbol,
+          decimals: balance.token.decimals,
+          blockchain: balance.token.blockchain
+        },
+        amount: balance.amount,
+        updateDate: balance.updateDate
+      })) || []
+      
+      return balances
+    } catch (error) {
+      console.error('❌ Failed to fetch balances:', error)
+      return []
+    }
   }
   
   async getTransactions(walletId: string): Promise<any[]> {
@@ -190,9 +231,42 @@ class CircleWalletService {
     return []
   }
   
-  async sendTransaction(params: any): Promise<any> {
+  async sendTransaction(params: {
+    walletId: string
+    destinationAddress: string
+    destinationBlockchain?: string
+    amount: string
+    tokenAddress?: string
+  }): Promise<any> {
     console.log('💸 Sending transaction:', params)
-    throw new Error('Transaction sending not implemented yet')
+    
+    try {
+      // Call server API endpoint to send transaction
+      const response = await fetch(`/api/wallets/${params.walletId}/transactions`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          destinationAddress: params.destinationAddress,
+          destinationBlockchain: params.destinationBlockchain,
+          amount: params.amount,
+          tokenAddress: params.tokenAddress,
+        }),
+      })
+
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.error || 'Failed to send transaction')
+      }
+
+      const result = await response.json()
+      console.log('✅ Transaction sent:', result.data)
+      return result.data
+    } catch (error) {
+      console.error('❌ Failed to send transaction:', error)
+      throw error
+    }
   }
   
   async requestTestnetTokens(walletId: string, nativeAmount: number, usdcAmount: number): Promise<void> {

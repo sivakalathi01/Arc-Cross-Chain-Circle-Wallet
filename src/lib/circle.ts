@@ -180,10 +180,12 @@ class CircleWalletService {
     }
   }
 
-  async createWallet(name?: string): Promise<any> {
+  async createWallet(name?: string, blockchain?: string): Promise<any> {
     if (!this.isInitialized) {
       await this.initialize()
     }
+    
+    const selectedBlockchain = blockchain || 'ARB-SEPOLIA'
     
     // Check if we're in MetaMask mode (placeholder keys) - but allow TEST_ keys for testnet
     if (this.config.apiKey === 'your_circle_testnet_api_key_here' ||
@@ -197,7 +199,7 @@ class CircleWalletService {
     // Real Circle testnet keys detected
     if (this.config.apiKey.startsWith('TEST_API_KEY:')) {
       console.log('🌐 Circle Testnet Mode - Using real Circle testnet API')
-      console.log('✅ Connected to Circle testnet environment')
+      console.log(`✅ Connected to Circle testnet environment (${selectedBlockchain})`)
     }
     
     if (!this.directClient) {
@@ -214,15 +216,18 @@ class CircleWalletService {
       
       while (attempts < maxAttempts) {
         try {
+          const requestBody = {
+            name,
+            blockchain: selectedBlockchain
+          }
+          console.log('🟡 Circle Service: Sending to API:', JSON.stringify(requestBody))
+          
           response = await fetch('/api/wallets', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-              name,
-              blockchain: 'ETH-SEPOLIA'
-            })
+            body: JSON.stringify(requestBody)
           })
           break // Success, exit retry loop
         } catch (fetchError) {

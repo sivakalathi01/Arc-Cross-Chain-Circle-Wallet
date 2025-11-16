@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { circleServerService } from '@/lib/circle-server'
+import { CircleDirectClient } from '@/lib/circle-direct'
+import { getCircleConfig } from '@/lib/circle-config'
+import { db } from '@/lib/database'
 
 // GET endpoint to fetch transactions for a wallet
 export async function GET(
@@ -37,44 +39,49 @@ export async function POST(
   try {
     const walletId = params.id
     const body = await request.json()
-    const { 
-      destinationAddress, 
-      amount, 
-      tokenId, 
-      blockchain, 
-      userToken,
-      fee 
-    } = body
 
-    console.log(`💸 API: Creating transaction for wallet ${walletId}...`)
+    console.log('💸 API: Sending transaction from wallet:', walletId)
+    console.log('📤 Transaction params:', body)
 
-    if (!userToken) {
-      return NextResponse.json({
-        success: false,
-        error: 'User token is required for transaction creation'
-      }, { status: 400 })
+    // Initialize Circle client
+    const config = getCircleConfig()
+    const circleClient = new CircleDirectClient(
+      config.apiKey,
+      config.entitySecret,
+      config.baseUrl
+    )
+
+    // Verify wallet exists in database
+    const wallet = await db.getWallet(walletId)
+
+    if (!wallet) {
+      return NextResponse.json(
+        { success: false, error: 'Wallet not found' },
+        { status: 404 }
+      )
     }
 
-    const transaction = await circleServerService.createTransaction({
+    // Send transaction via Circle API
+    const transaction = await circleClient.sendTransaction({
       walletId,
-      destinationAddress,
-      amount,
-      tokenId,
-      blockchain,
-      userToken,
-      fee
+      destinationAddress: body.destinationAddress,
+      destinationBlockchain: body.destinationBlockchain,
+      amount: body.amount,
+      tokenAddress: body.tokenAddress,
     })
+
+    console.log('✅ Transaction sent successfully:', transaction.id)
 
     return NextResponse.json({
       success: true,
       data: transaction
     })
   } catch (error: any) {
-    console.error('❌ API: Transaction creation failed:', error)
+    console.error('❌ API: Transaction failed:', error)
     
     return NextResponse.json({
       success: false,
-      error: error.message || 'Failed to create transaction'
+      error: error.message || 'Failed to send transaction'
     }, { status: 500 })
   }
 }

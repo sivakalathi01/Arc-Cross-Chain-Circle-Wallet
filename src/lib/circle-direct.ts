@@ -302,6 +302,102 @@ class CircleDirectClient {
       return false
     }
   }
+
+  // Get wallet balance
+  async getWalletBalance(walletId: string): Promise<any> {
+    try {
+      console.log(`💰 Fetching balance for wallet ${walletId}...`)
+      const response = await this.makeRequest(`/v1/w3s/wallets/${walletId}/balances`, 'GET')
+      console.log(`📊 Balance API Response:`, JSON.stringify(response, null, 2))
+      console.log(`✅ Found ${response.data?.tokenBalances?.length || 0} token balances`)
+      return response.data
+    } catch (error) {
+      console.error('❌ Failed to fetch wallet balance:', error)
+      throw error
+    }
+  }
+
+  // Get wallet details
+  async getWallet(walletId: string): Promise<any> {
+    try {
+      console.log(`🔍 Fetching wallet details for ${walletId}...`)
+      const response = await this.makeRequest(`/v1/w3s/wallets/${walletId}`, 'GET')
+      return response.data
+    } catch (error) {
+      console.error('❌ Failed to fetch wallet details:', error)
+      throw error
+    }
+  }
+
+  // Send transaction
+  async sendTransaction(params: {
+    walletId: string
+    destinationAddress: string
+    destinationBlockchain?: string
+    amount: string
+    tokenAddress?: string
+  }): Promise<any> {
+    try {
+      console.log(`💸 Initiating transaction from wallet ${params.walletId}...`)
+      
+      // Encrypt entity secret for transaction
+      const entitySecretCiphertext = await this.encryptEntitySecret()
+      console.log('🔑 Entity secret encrypted for transaction, length:', entitySecretCiphertext.length)
+      
+      // Get wallet details to determine source blockchain
+      const wallet = await this.getWallet(params.walletId)
+      const sourceBlockchain = wallet.blockchain
+      const destinationBlockchain = params.destinationBlockchain || sourceBlockchain
+      
+      console.log(`🌐 Source blockchain: ${sourceBlockchain}`)
+      console.log(`🌐 Destination blockchain: ${destinationBlockchain}`)
+      
+      const isCrossChain = sourceBlockchain !== destinationBlockchain
+      
+      if (isCrossChain) {
+        console.log('🌉 Cross-chain transfer detected')
+      }
+      
+      // Get wallet balance to find the token ID
+      const balances = await this.getWalletBalance(params.walletId)
+      const usdcToken = balances.tokenBalances?.find((b: any) => 
+        b.token.symbol.includes('USDC')
+      )
+      
+      if (!usdcToken) {
+        throw new Error('No USDC token found in wallet')
+      }
+      
+      console.log(`💰 Using token: ${usdcToken.token.symbol} (${usdcToken.token.id})`)
+      
+      // Build transaction request
+      const transactionRequest = {
+        idempotencyKey: uuidv4(),
+        entitySecretCiphertext,
+        walletId: params.walletId,
+        destinationAddress: params.destinationAddress,
+        amounts: [params.amount],
+        feeLevel: 'MEDIUM',
+        tokenId: usdcToken.token.id,
+        ...(isCrossChain && { 
+          destinationChain: destinationBlockchain 
+        })
+      }
+      
+      console.log('📤 Sending transaction request:', {
+        ...transactionRequest,
+        entitySecretCiphertext: `[${transactionRequest.entitySecretCiphertext.length} chars]`
+      })
+      
+      const response = await this.makeRequest('/v1/w3s/developer/transactions/transfer', 'POST', transactionRequest)
+      
+      console.log('✅ Transaction initiated:', response)
+      return response.data
+    } catch (error) {
+      console.error('❌ Failed to send transaction:', error)
+      throw error
+    }
+  }
 }
 
 export { CircleDirectClient }

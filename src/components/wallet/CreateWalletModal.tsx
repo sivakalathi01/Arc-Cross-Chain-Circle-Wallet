@@ -4,16 +4,25 @@ import { useState } from 'react'
 
 interface CreateWalletModalProps {
   onClose: () => void
-  onSubmit: (name?: string) => Promise<void>
+  onSubmit: (name?: string, blockchain?: string) => Promise<void>
   loading: boolean
 }
 
 export function CreateWalletModal({ onClose, onSubmit, loading }: CreateWalletModalProps) {
   const [walletName, setWalletName] = useState('')
+  const [blockchain, setBlockchain] = useState('ARC-TESTNET')
+
+  const handleBlockchainChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newBlockchain = e.target.value
+    console.log('🔵 Modal: Blockchain changed to:', newBlockchain)
+    setBlockchain(newBlockchain)
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    await onSubmit(walletName.trim() || undefined)
+    console.log('🔵 Modal: Current blockchain state:', blockchain)
+    console.log('🔵 Modal: Submitting wallet creation with blockchain:', blockchain)
+    await onSubmit(walletName.trim() || undefined, blockchain)
   }
 
   return (
@@ -48,6 +57,29 @@ export function CreateWalletModal({ onClose, onSubmit, loading }: CreateWalletMo
             />
             <p className="mt-1 text-sm text-gray-500">
               If not provided, a default name will be assigned.
+            </p>
+          </div>
+
+          <div className="mb-4">
+            <label htmlFor="blockchain" className="block text-sm font-medium text-gray-700 mb-2">
+              Blockchain Network
+            </label>
+            <select
+              id="blockchain"
+              value={blockchain}
+              onChange={handleBlockchainChange}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            >
+              <option value="ARC-TESTNET">🔷 Arc Testnet</option>
+              <option value="ETH-SEPOLIA">⬠ Ethereum Sepolia Testnet</option>
+              <option value="MATIC-AMOY">💜 Polygon Amoy Testnet</option>
+              <option value="AVAX-FUJI">🔺 Avalanche Fuji Testnet</option>
+            </select>
+            <p className="mt-1 text-sm text-gray-500">
+              {blockchain === 'ARC-TESTNET' && '⚡ Arc L3 testnet - Built on Arbitrum Orbit'}
+              {blockchain === 'ETH-SEPOLIA' && '🔧 Ethereum mainnet testnet environment'}
+              {blockchain === 'MATIC-AMOY' && '💰 Polygon testnet with minimal gas fees'}
+              {blockchain === 'AVAX-FUJI' && '❄️ Avalanche testnet for DeFi applications'}
             </p>
           </div>
 

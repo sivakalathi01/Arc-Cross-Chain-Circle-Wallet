@@ -7,6 +7,7 @@ export function SendForm() {
   const { selectedWallet, sendTransaction, loading } = useWallet()
   const [formData, setFormData] = useState({
     destinationAddress: '',
+    destinationBlockchain: selectedWallet?.blockchain || 'ETH-SEPOLIA',
     amount: '',
     memo: '',
   })
@@ -39,12 +40,14 @@ export function SendForm() {
     try {
       await sendTransaction({
         destinationAddress: formData.destinationAddress,
+        destinationBlockchain: formData.destinationBlockchain,
         amount: formData.amount,
       })
 
       // Reset form on success
       setFormData({
         destinationAddress: '',
+        destinationBlockchain: selectedWallet?.blockchain || 'ETH-SEPOLIA',
         amount: '',
         memo: '',
       })
@@ -74,11 +77,38 @@ export function SendForm() {
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-900 mb-2">Send USDC</h3>
         <p className="text-sm text-gray-600">
-          Send USDC tokens to any Ethereum address
+          Send USDC tokens across blockchains
         </p>
+        {selectedWallet && (
+          <p className="text-xs text-gray-500 mt-1">
+            From: {selectedWallet.blockchain}
+          </p>
+        )}
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label htmlFor="destinationBlockchain" className="block text-sm font-medium text-gray-700 mb-1">
+            Destination Blockchain
+          </label>
+          <select
+            id="destinationBlockchain"
+            value={formData.destinationBlockchain}
+            onChange={(e) => handleInputChange('destinationBlockchain', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="ARC-TESTNET">🔷 Arc Testnet</option>
+            <option value="ETH-SEPOLIA">⬠ Ethereum Sepolia</option>
+            <option value="MATIC-AMOY">💜 Polygon Amoy</option>
+            <option value="AVAX-FUJI">🔺 Avalanche Fuji</option>
+          </select>
+          {formData.destinationBlockchain !== selectedWallet?.blockchain && (
+            <p className="mt-1 text-xs text-orange-600">
+              ⚠️ Cross-chain transfer: {selectedWallet?.blockchain} → {formData.destinationBlockchain}
+            </p>
+          )}
+        </div>
+
         <div>
           <label htmlFor="destinationAddress" className="block text-sm font-medium text-gray-700 mb-1">
             Recipient Address

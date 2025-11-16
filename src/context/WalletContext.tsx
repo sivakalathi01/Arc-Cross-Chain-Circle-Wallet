@@ -18,12 +18,13 @@ interface WalletContextType {
   
   // Actions
   initializeWallet: () => Promise<void>
-  createWallet: (name?: string) => Promise<Wallet | null>
+  createWallet: (name?: string, blockchain?: string) => Promise<Wallet | null>
   selectWallet: (wallet: Wallet) => void
   refreshBalances: (walletId?: string) => Promise<void>
   refreshTransactions: (walletId?: string) => Promise<void>
   sendTransaction: (params: {
     destinationAddress: string
+    destinationBlockchain?: string
     amount: string
     tokenAddress?: string
   }) => Promise<Transaction | null>
@@ -144,19 +145,21 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  const createWallet = async (name?: string): Promise<Wallet | null> => {
+  const createWallet = async (name?: string, blockchain?: string): Promise<Wallet | null> => {
     try {
       setLoading(true)
       setError(null)
 
-      console.log(`🔨 Creating new wallet with Circle testnet: ${name || 'Unnamed Wallet'}`)
+      console.log(`🔨 Creating new wallet with Circle testnet: ${name || 'Unnamed Wallet'} on ${blockchain || 'ARB-SEPOLIA'}`)
 
       // Create wallet with Circle testnet API
-      const newWallet = await circleWalletService.createWallet(name)
-      console.log('✅ Wallet created via Circle testnet API')
+      const newWallet = await circleWalletService.createWallet(name, blockchain)
+      console.log('✅ Wallet created via Circle testnet API:', newWallet)
+      console.log('🔨 Returned wallet blockchain:', newWallet?.blockchain)
       
       // Refresh wallets list from API
       const updatedWallets = await circleWalletService.getWallets()
+      console.log('📋 Updated wallets list:', updatedWallets)
       setWallets(updatedWallets)
 
       if (newWallet) {
@@ -215,6 +218,7 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
 
   const sendTransaction = async (params: {
     destinationAddress: string
+    destinationBlockchain?: string
     amount: string
     tokenAddress?: string
   }): Promise<Transaction | null> => {
@@ -230,17 +234,36 @@ export function WalletProvider({ children }: { children: React.ReactNode }) {
       const transaction = await circleWalletService.sendTransaction({
         walletId: selectedWallet.id,
         destinationAddress: params.destinationAddress,
+        destinationBlockchain: params.destinationBlockchain,
         amount: params.amount,
         tokenAddress: params.tokenAddress,
       })
 
-      addTransaction(transaction)
+      // Construct a complete transaction object from the response
+      const completeTransaction: Transaction = {
+        id: transaction.id,
+        blockchain: params.destinationBlockchain || selectedWallet.blockchain,
+        tokenId: params.tokenAddress || '',
+        walletId: selectedWallet.id,
+        sourceAddress: selectedWallet.address,
+        destinationAddress: params.destinationAddress,
+        transactionType: 'OUTBOUND',
+        custodyType: 'DEVELOPER',
+        state: transaction.state || 'INITIATED',
+        amounts: [params.amount],
+        txHash: transaction.txHash,
+        operation: 'TRANSFER' as any,
+        updateDate: new Date().toISOString(),
+        createDate: new Date().toISOString(),
+      }
+
+      addTransaction(completeTransaction)
       
       // Refresh balances after transaction
       await refreshBalances()
 
       toast.success('Transaction sent successfully')
-      return transaction
+      return completeTransaction
     } catch (error) {
       console.error('Failed to send transaction:', error)
       setError('Failed to send transaction')

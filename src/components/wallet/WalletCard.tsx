@@ -2,6 +2,7 @@
 
 import { Wallet, WalletBalance } from '@/types'
 import { useState } from 'react'
+import { getExplorerUrl } from '@/lib/block-explorer'
 
 interface WalletCardProps {
   wallet: Wallet
@@ -15,7 +16,7 @@ export function WalletCard({ wallet, balance, isSelected, onSelect }: WalletCard
   const [showFullAddress, setShowFullAddress] = useState(false)
   
   const totalUSDC = balance
-    .filter(b => b.token.symbol === 'USDC')
+    .filter(b => b.token.symbol.includes('USDC'))
     .reduce((total, b) => total + parseFloat(b.amount), 0)
 
   const copyAddress = (e: React.MouseEvent) => {
@@ -82,15 +83,30 @@ export function WalletCard({ wallet, balance, isSelected, onSelect }: WalletCard
               )}
             </button>
             {wallet.address && (
-              <svg 
-                onClick={copyAddress}
-                className="w-4 h-4 text-gray-400 hover:text-blue-600 cursor-pointer" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-              </svg>
+              <>
+                <svg 
+                  onClick={copyAddress}
+                  className="w-4 h-4 text-gray-400 hover:text-blue-600 cursor-pointer" 
+                  fill="none" 
+                  stroke="currentColor" 
+                  viewBox="0 0 24 24"
+                  title="Copy address"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                </svg>
+                <a
+                  href={getExplorerUrl(wallet.blockchain, 'address', wallet.address)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-4 h-4 text-gray-400 hover:text-blue-600 cursor-pointer"
+                  title="View on block explorer"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                  </svg>
+                </a>
+              </>
             )}
           </div>
         </div>

@@ -26,7 +26,7 @@ export function WalletDashboard() {
     refreshTransactions,
   } = useWallet()
 
-  const [activeTab, setActiveTab] = useState<'overview' | 'send' | 'cross-chain' | 'faucet' | 'metamask'>('overview')
+  const [activeTab, setActiveTab] = useState<'overview' | 'send' | 'faucet' | 'metamask'>('overview')
   const [showCreateModal, setShowCreateModal] = useState(false)
   const circleConfig = getCircleConfigStatus()
   const [metaMaskConnected, setMetaMaskConnected] = useState(false)
@@ -41,10 +41,18 @@ export function WalletDashboard() {
 
   const handleRefresh = async () => {
     if (selectedWallet) {
-      await Promise.all([
-        refreshBalances(selectedWallet.id),
-        refreshTransactions(selectedWallet.id),
-      ])
+      try {
+        console.log('🔄 Refreshing wallet data for:', selectedWallet.id)
+        await Promise.all([
+          refreshBalances(selectedWallet.id),
+          refreshTransactions(selectedWallet.id),
+        ])
+        console.log('✅ Refresh completed')
+      } catch (error) {
+        console.error('❌ Refresh failed:', error)
+      }
+    } else {
+      console.log('⚠️ No wallet selected for refresh')
     }
   }
 
@@ -190,18 +198,7 @@ export function WalletDashboard() {
                 }`}
               >
                 <Send className="h-4 w-4 mr-2 inline" />
-                Send
-              </button>
-              <button
-                onClick={() => setActiveTab('cross-chain')}
-                className={`py-4 px-6 border-b-2 font-medium text-sm ${
-                  activeTab === 'cross-chain'
-                    ? 'border-blue-500 text-blue-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                }`}
-              >
-                <ArrowUpDown className="h-4 w-4 mr-2 inline" />
-                Cross Chain
+                Send / Cross-Chain
               </button>
               <button
                 onClick={() => setActiveTab('faucet')}
@@ -296,10 +293,6 @@ export function WalletDashboard() {
               <SendForm />
             )}
 
-            {activeTab === 'cross-chain' && (
-              <CrossChainForm />
-            )}
-
             {activeTab === 'faucet' && selectedWallet && (
               <FaucetPanel 
                 walletId={selectedWallet.id}
@@ -312,7 +305,7 @@ export function WalletDashboard() {
                 <div className="text-center mb-6">
                   <h3 className="text-xl font-semibold text-gray-900 mb-2">Connect Your MetaMask</h3>
                   <p className="text-gray-600">
-                    Connect your MetaMask wallet with 10 USDC to test cross-chain transfers between Sepolia and Arc testnets
+                    Connect your MetaMask wallet with 10 USDC to test cross-chain transfers
                   </p>
                 </div>
                 
@@ -322,11 +315,11 @@ export function WalletDashboard() {
                   <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
                     <h4 className="font-medium text-blue-900 mb-2">Ready for Cross-Chain Testing!</h4>
                     <p className="text-sm text-blue-800 mb-3">
-                      Your MetaMask is connected. You can now test CCTP cross-chain USDC transfers using the Cross Chain tab.
+                      Your MetaMask is connected. You can now test cross-chain USDC transfers using the Send tab.
                     </p>
                     <div className="flex space-x-3">
                       <button
-                        onClick={() => setActiveTab('cross-chain')}
+                        onClick={() => setActiveTab('send')}
                         className="text-sm bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700"
                       >
                         Start Cross-Chain Transfer
@@ -350,9 +343,10 @@ export function WalletDashboard() {
       {showCreateModal && (
         <CreateWalletModal
           onClose={() => setShowCreateModal(false)}
-          onSubmit={async (name) => {
+          onSubmit={async (name, blockchain) => {
+            console.log('🟢 Dashboard: Received blockchain:', blockchain)
             try {
-              const wallet = await createWallet(name)
+              const wallet = await createWallet(name, blockchain)
               if (wallet) {
                 setShowCreateModal(false)
               }
